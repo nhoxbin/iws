@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PostController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,4 +25,10 @@ Route::group(['prefix' => 'auth'], function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('user/role', [AuthController::class, 'updateRole']);
     });
+});
+
+Route::apiResource('posts', PostController::class);
+Route::middleware('auth:api')->group(function () {
+    Route::post('posts/{post}/save', [PostController::class, 'save']);
+    Route::get('saved-posts', [PostController::class, 'savedPosts']);
 });
