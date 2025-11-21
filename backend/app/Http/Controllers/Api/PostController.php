@@ -22,7 +22,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with(['user', 'tags'])->latest()->paginate(10);
+        $posts = Post::with(['user', 'tags', 'category'])->latest()->paginate(10);
         return PostResource::collection($posts);
     }
 
@@ -38,21 +38,25 @@ class PostController extends Controller
             'question' => 'required|string',
             'tags' => 'array',
             'tags.*' => 'string|max:255',
+            'category_id' => 'nullable|numeric|exists:categories,id',
         ]);
 
         $post = Auth::user()->posts()->create([
             'title' => $validated['title'],
             'question' => $validated['question'],
+            'category_id' => $validated['category_id'],
         ]);
 
         $tags = [];
-        foreach ($validated['tags'] as $tagName) {
-            $tag = Tag::firstOrCreate(['name' => $tagName]);
-            $tags[] = $tag->id;
+        if (isset($validated['tags'])) {
+            foreach ($validated['tags'] as $tagName) {
+                $tag = Tag::firstOrCreate(['name' => $tagName]);
+                $tags[] = $tag->id;
+            }
         }
         $post->tags()->sync($tags);
 
-        return new PostResource($post->load(['user', 'tags']));
+        return new PostResource($post->load(['user', 'tags', 'category']));
     }
 
     /**
@@ -60,7 +64,7 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        return new PostResource($post->load(['user', 'tags']));
+        return new PostResource($post->load(['user', 'tags', 'category']));
     }
 
     /**
@@ -75,6 +79,7 @@ class PostController extends Controller
             'question' => 'string',
             'tags' => 'array',
             'tags.*' => 'string|max:255',
+            'category_id' => 'nullable|numeric|exists:categories,id',
         ]);
 
         $post->update($validated);
@@ -88,7 +93,7 @@ class PostController extends Controller
             $post->tags()->sync($tags);
         }
 
-        return new PostResource($post->load(['user', 'tags']));
+        return new PostResource($post->load(['user', 'tags', 'category']));
     }
 
     /**

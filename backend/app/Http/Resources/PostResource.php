@@ -2,7 +2,10 @@
 
 namespace App\Http\Resources;
 
-use Illuminate a\Http\Request;
+use App\Http\Resources\CategoryResource;
+use App\Http\Resources\TagResource;
+use App\Http\Resources\UserResource;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PostResource extends JsonResource
@@ -22,6 +25,7 @@ class PostResource extends JsonResource
             'is_resolved' => $this->is_resolved,
             'user' => new UserResource($this->whenLoaded('user')),
             'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'category' => new CategoryResource($this->whenLoaded('category')),
         ];
     }
 }
