@@ -48,7 +48,7 @@ function OnboardingPage() {
 
     setLoading(true);
     try {
-      await api.post('/api/auth/user/role', { role: selectedRole });
+      await api.post('/auth/user/role', { role: selectedRole });
       updateUser({ role: selectedRole });
       router.push('/dashboard');
     } catch (error) {

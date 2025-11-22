@@ -1,13 +1,147 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
-import { CheckCircle2, Clock, AtSign } from 'lucide-react';
+import { CheckCircle2, Clock, AtSign, MessageSquare, ThumbsUp, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import PrivateRoute from '@/components/private-route';
 import { AppHeader } from '@/components/app-header';
+import api from '@/lib/api';
+
+interface Activity {
+  id: number;
+  type: 'question' | 'answer' | 'helpful';
+  title: string;
+  post_id: number;
+  created_at: string;
+  is_answered?: boolean;
+}
 
 function ProfilePage() {
   const { user } = useAuthStore();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [stats, setStats] = useState({
+    questionsCount: 0,
+    answersCount: 0,
+    helpfulMarksCount: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActivityHistory();
+  }, []);
+
+  const fetchActivityHistory = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch user's questions
+      const postsResponse = await api.get('/posts');
+      const userPosts = postsResponse.data.data.filter((post: any) => post.user.id === user?.id);
+
+      // Fetch user's answers (we'll need to iterate through questions)
+      const answersResponse = await api.get('/posts');
+      const allPosts = answersResponse.data.data;
+
+      const userAnswers: any[] = [];
+      for (const post of allPosts) {
+        if (post.answers && post.answers.length > 0) {
+          const userAnswersInPost = post.answers.filter((answer: any) => answer.user.id === user?.id);
+          userAnswers.push(...userAnswersInPost.map((ans: any) => ({
+            ...ans,
+            post_title: post.title,
+            post_id: post.id,
+          })));
+        }
+      }
+
+      // Combine activities
+      const activityList: Activity[] = [];
+
+      // Add questions
+      userPosts.forEach((post: any) => {
+        activityList.push({
+          id: post.id,
+          type: 'question',
+          title: post.title,
+          post_id: post.id,
+          created_at: post.created_at,
+          is_answered: (post.answers_count || 0) > 0,
+        });
+      });
+
+      // Add answers
+      userAnswers.forEach((answer: any) => {
+        activityList.push({
+          id: answer.id,
+          type: 'answer',
+          title: answer.post_title,
+          post_id: answer.post_id,
+          created_at: answer.created_at,
+        });
+      });
+
+      // Sort by date (most recent first)
+      activityList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setActivities(activityList.slice(0, 10)); // Show latest 10 activities
+      setStats({
+        questionsCount: userPosts.length,
+        answersCount: userAnswers.length,
+        helpfulMarksCount: userAnswers.reduce((sum: number, ans: any) => sum + (ans.helpful_count || 0), 0),
+      });
+    } catch (error) {
+      console.error('Error fetching activity:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) {
+      return 'Today';
+    } else if (diffInDays === 1) {
+      return 'Yesterday';
+    } else if (diffInDays < 7) {
+      return `${diffInDays} days ago`;
+    } else if (diffInDays < 30) {
+      const weeks = Math.floor(diffInDays / 7);
+      return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'question':
+        return <HelpCircle className="w-5 h-5 text-blue-500" />;
+      case 'answer':
+        return <MessageSquare className="w-5 h-5 text-green-500" />;
+      case 'helpful':
+        return <ThumbsUp className="w-5 h-5 text-purple-500" />;
+      default:
+        return <Clock className="w-5 h-5 text-slate-400" />;
+    }
+  };
+
+  const getActivityLabel = (activity: Activity) => {
+    switch (activity.type) {
+      case 'question':
+        return activity.is_answered ? 'Answered' : 'Awaiting answer';
+      case 'answer':
+        return 'Answered';
+      case 'helpful':
+        return 'Marked helpful';
+      default:
+        return '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -53,54 +187,76 @@ function ProfilePage() {
               </p>
             </div>
 
-            {/* Questions Asked Card */}
+            {/* Stats Card */}
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-              <h3 className="text-slate-400 mb-2">Questions Asked</h3>
-              <div className="text-5xl font-bold text-white mb-2">28</div>
-              <p className="text-slate-500 text-sm">+5 in the last 30 days</p>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-slate-400 text-sm mb-1">Questions</h3>
+                  <div className="text-3xl font-bold text-white">{stats.questionsCount}</div>
+                </div>
+                <div>
+                  <h3 className="text-slate-400 text-sm mb-1">Answers</h3>
+                  <div className="text-3xl font-bold text-white">{stats.answersCount}</div>
+                </div>
+                <div>
+                  <h3 className="text-slate-400 text-sm mb-1">Helpful Marks</h3>
+                  <div className="text-3xl font-bold text-white">{stats.helpfulMarksCount}</div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Activity History */}
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
             <h2 className="text-xl font-semibold text-white mb-6">Activity History</h2>
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 mt-1">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-medium mb-1">
-                    How to handle state management in a large-scale React application?
-                  </h3>
-                  <p className="text-slate-400 text-sm">Answered 2 days ago</p>
-                </div>
-              </div>
 
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 mt-1">
-                  <Clock className="w-5 h-5 text-blue-500" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-medium mb-1">
-                    Best practices for REST API design and versioning.
-                  </h3>
-                  <p className="text-slate-400 text-sm">Awaiting answer · 5 days ago</p>
-                </div>
+            {loading && (
+              <div className="text-center py-8">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+                <p className="text-slate-400 text-sm">Loading activity...</p>
               </div>
+            )}
 
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 mt-1">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-medium mb-1">
-                    What are the core differences between SQL and NoSQL databases?
-                  </h3>
-                  <p className="text-slate-400 text-sm">Answered 1 week ago</p>
-                </div>
+            {!loading && activities.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-slate-400">No activity yet. Start asking questions or providing answers!</p>
               </div>
-            </div>
+            )}
+
+            {!loading && activities.length > 0 && (
+              <div className="space-y-6">
+                {activities.map((activity) => (
+                  <Link
+                    key={`${activity.type}-${activity.id}`}
+                    href={`/questions/${activity.post_id}`}
+                    className="flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 p-3 rounded-lg transition -mx-3"
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-medium mb-1 line-clamp-2">
+                        {activity.title}
+                      </h3>
+                      <p className="text-slate-400 text-sm">
+                        {activity.type === 'question' ? 'Asked' : getActivityLabel(activity)} · {formatDate(activity.created_at)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {!loading && activities.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+                <Link
+                  href="/my-questions"
+                  className="text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium"
+                >
+                  View all questions →
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </main>

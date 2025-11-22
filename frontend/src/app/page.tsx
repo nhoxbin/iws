@@ -1,31 +1,36 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import Link from 'next/link';
-import { useAuthHydration } from '@/hooks/use-auth-hydration';
+import { useAuthStore } from '@/lib/auth-store';
 
 export default function HomePage() {
-  const router = useRouter();
-  const { isAuthenticated, isHydrated } = useAuthHydration();
+  const { isAuthenticated } = useAuthStore();
 
-  useEffect(() => {
-    if (isHydrated && isAuthenticated) {
-      router.replace('/dashboard');
-    }
-  }, [isHydrated, isAuthenticated, router]);
-
-  // Show loading while checking authentication or redirecting
-  if (!isHydrated || isAuthenticated) {
+  // If authenticated, show dashboard link instead of redirecting
+  // This prevents unwanted redirects when reloading other pages
+  if (isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-slate-400">
-            {!isHydrated ? 'Loading...' : 'Redirecting to dashboard...'}
+      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+        <div className="max-w-xl mx-auto text-center">
+          <div className="mb-8 flex justify-center">
+            <div className="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center shadow-2xl">
+              <span className="text-white font-bold text-4xl">IWS</span>
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-6">
+            Welcome Back!
+          </h1>
+          <p className="text-xl text-slate-400 mb-8">
+            You&apos;re already logged in
           </p>
+          <Link
+            href="/dashboard"
+            className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-blue-500/50"
+          >
+            Go to Dashboard
+          </Link>
         </div>
-      </div>
+      </main>
     );
   }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
+use App\Models\Answer;
 use App\Models\Post;
 use App\Models\Tag;
 use Illuminate\Http\Request;
@@ -64,7 +65,7 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        return new PostResource($post->load(['user', 'tags', 'category']));
+        return new PostResource($post->load(['user', 'tags', 'category', 'answers.user']));
     }
 
     /**

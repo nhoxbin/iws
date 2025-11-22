@@ -2,8 +2,8 @@ import axios from 'axios';
 import { isTokenExpired } from './jwt';
 
 const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'http://127.0.0.1:8000'
-  : 'https://iws.com';
+  ? 'http://127.0.0.1:8000/api'
+  : 'https://iws.hpvt.net/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -16,13 +16,24 @@ export const api = axios.create({
 // Request interceptor to add JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Get token from zustand persisted storage
+    const authStorage = localStorage.getItem('auth-storage');
+    let token = null;
+
+    if (authStorage) {
+      try {
+        const parsed = JSON.parse(authStorage);
+        token = parsed.state?.token;
+      } catch (e) {
+        console.error('Failed to parse auth storage:', e);
+      }
+    }
 
     if (token) {
       // Check if token is expired before making the request
       if (isTokenExpired(token)) {
-        // Token is expired, clear it and redirect to login
-        localStorage.removeItem('token');
+        // Token is expired, clear auth storage
+        localStorage.removeItem('auth-storage');
         window.location.href = '/login';
         return Promise.reject(new Error('Token expired'));
       }
@@ -51,15 +62,24 @@ api.interceptors.response.use(
       try {
         // Try to refresh the token
         const refreshResponse = await axios.post(
-          `${API_BASE_URL}/api/refresh`,
+          `${API_BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
 
         const { token } = refreshResponse.data;
 
-        // Save new token
-        localStorage.setItem('token', token);
+        // Update token in auth-storage
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          try {
+            const parsed = JSON.parse(authStorage);
+            parsed.state.token = token;
+            localStorage.setItem('auth-storage', JSON.stringify(parsed));
+          } catch (e) {
+            console.error('Failed to update auth storage:', e);
+          }
+        }
 
         // Update the Authorization header
         originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -68,7 +88,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed, clear auth and redirect to login
-        localStorage.removeItem('token');
+        localStorage.removeItem('auth-storage');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

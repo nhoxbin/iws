@@ -48,6 +48,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'fresher',
         ]);
 
         $token = JWTAuth::fromUser($user);

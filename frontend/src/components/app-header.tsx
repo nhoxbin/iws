@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Search, Bell, Home, HelpCircle, Bookmark, BarChart3, ChevronDown, User, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import api from '@/lib/api';
 
 interface MenuItem {
   label: string;
@@ -19,7 +20,7 @@ interface AppHeaderProps {
 
 const defaultMenuItems: MenuItem[] = [
   { label: 'Home', icon: <Home className="w-5 h-5" />, href: '/dashboard' },
-  { label: 'My Questions', icon: <HelpCircle className="w-5 h-5" />, href: '/ask-question' },
+  { label: 'My Questions', icon: <HelpCircle className="w-5 h-5" />, href: '/my-questions' },
   { label: 'Saved', icon: <Bookmark className="w-5 h-5" />, href: '/saved' },
   { label: 'Leaderboard', icon: <BarChart3 className="w-5 h-5" />, href: '/leaderboard' },
 ];
@@ -30,7 +31,90 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
   const pathname = usePathname();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<Array<{
+    id: number;
+    type: string;
+    message: string;
+    post_id: number | null;
+    read: boolean;
+    created_at: string;
+    post?: { id: number; title: string };
+  }>>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const response = await api.get('/notifications/unread-count');
+      setUnreadCount(response.data.count || 0);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  }, []);
+
+  const fetchNotifications = useCallback(async () => {
+    if (notificationsLoading) return;
+
+    try {
+      setNotificationsLoading(true);
+      const response = await api.get('/notifications?limit=5');
+      setNotifications(response.data.data || []);
+      fetchUnreadCount();
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [notificationsLoading, fetchUnreadCount]);
+
+  const handleNotificationClick = () => {
+    setIsNotificationOpen(!isNotificationOpen);
+    if (!isNotificationOpen && notifications.length === 0) {
+      fetchNotifications();
+    }
+  };
+
+  const markAsRead = async (id: number) => {
+    try {
+      await api.post(`/notifications/${id}/read`);
+      setNotifications(notifications.map(n =>
+        n.id === id ? { ...n, read: true } : n
+      ));
+      fetchUnreadCount();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else if (diffInDays < 7) {
+      return `${diffInDays}d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+      // Poll for unread count every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, fetchUnreadCount]);
 
   const handleLogout = () => {
     logout();
@@ -95,9 +179,16 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
                 <Search className="w-5 h-5" />
               </button>
             )}
-            <button className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+            <button
+              onClick={handleNotificationClick}
+              className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -140,10 +231,100 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
               </button>
             )}
 
-            <button className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={handleNotificationClick}
+                className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Panel */}
+              {isNotificationOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsNotificationOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 max-h-[32rem] overflow-hidden flex flex-col">
+                    <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{unreadCount} unread</span>
+                      )}
+                    </div>
+
+                    <div className="overflow-y-auto flex-1">
+                      {notificationsLoading ? (
+                        <div className="p-8 text-center">
+                          <div className="animate-spin w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Loading...</p>
+                        </div>
+                      ) : notifications.length > 0 ? (
+                        <div className="divide-y divide-slate-200 dark:divide-slate-700">
+                          {notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition cursor-pointer ${
+                                !notification.read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+                              }`}
+                              onClick={() => {
+                                if (!notification.read) {
+                                  markAsRead(notification.id);
+                                }
+                                if (notification.post_id) {
+                                  router.push(`/questions/${notification.post_id}`);
+                                  setIsNotificationOpen(false);
+                                }
+                              }}
+                            >
+                              <div className="flex gap-2 items-start">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-slate-900 dark:text-white mb-1">
+                                    {notification.message}
+                                  </p>
+                                  {notification.post && (
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 truncate">
+                                      {notification.post.title}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                    {formatDate(notification.created_at)}
+                                  </p>
+                                </div>
+                                {!notification.read && (
+                                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center">
+                          <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                          <p className="text-sm text-slate-500 dark:text-slate-400">No notifications yet</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+                      <Link
+                        href="/notifications"
+                        onClick={() => setIsNotificationOpen(false)}
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-center block"
+                      >
+                        Show All
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Avatar Dropdown */}
             <div className="relative">
@@ -182,7 +363,7 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
                       Saved
                     </Link>
                     <Link
-                      href="/ask-question"
+                      href="/my-questions"
                       onClick={() => setIsAvatarDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
                     >

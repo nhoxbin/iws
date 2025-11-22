@@ -12,7 +12,7 @@ class PostPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role === 'junior';
+        return true;
     }
 
     /**
@@ -20,7 +20,7 @@ class PostPolicy
      */
     public function update(User $user, Post $post): bool
     {
-        return $user->id === $post->user_id;
+        return $user->id === $post->user_id && $post->answers()->count() === 0;
     }
 
     /**
@@ -28,7 +28,6 @@ class PostPolicy
      */
     public function delete(User $user, Post $post): bool
     {
-        return $user->id === $post->user_id;
+        return $user->id === $post->user_id && $post->answers()->count() === 0;
     }
 }
-

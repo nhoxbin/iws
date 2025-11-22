@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
@@ -10,7 +10,7 @@ import { getZodFieldErrors } from "@/lib/form-utils";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { setAuth, isAuthenticated, _hasHydrated } = useAuthStore();
+  const { setAuth, isAuthenticated } = useAuthStore();
   const [formData, setFormData] = useState<RegisterFormData>({
     name: "",
     email: "",
@@ -21,16 +21,20 @@ export default function RegisterPage() {
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (_hasHydrated && isAuthenticated) {
-      router.replace('/dashboard');
-    }
-  }, [_hasHydrated, isAuthenticated, router]);
-
-  // Don't render form if authenticated
-  if (!_hasHydrated || isAuthenticated) {
-    return null;
+  // Don't show register form if authenticated - show message instead
+  if (isAuthenticated) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-6 bg-zinc-100 dark:bg-zinc-950">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
+            You&apos;re already logged in
+          </h1>
+          <Link href="/dashboard" className="text-blue-600 dark:text-blue-400 hover:underline">
+            Go to Dashboard
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +52,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await api.post('/api/auth/register', {
+      const response = await api.post('/auth/register', {
         name: formData.name,
         email: formData.email,
         password: formData.password,

@@ -13,12 +13,10 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  _hasHydrated: boolean;
   setAuth: (token: string) => void;
   updateUser: (user: Partial<User>) => void;
   logout: () => void;
   checkAuth: () => void;
-  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,7 +25,6 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      _hasHydrated: false,
 
       setAuth: (token: string) => {
         // Decode JWT token to get user info
@@ -82,16 +79,11 @@ export const useAuthStore = create<AuthState>()(
           get().logout();
         }
       },
-
-      setHasHydrated: (state) => {
-        set({ _hasHydrated: state });
-      },
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
         state?.checkAuth();
       },
     }

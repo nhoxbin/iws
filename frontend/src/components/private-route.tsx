@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 
@@ -10,20 +10,26 @@ export default function PrivateRoute({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, _hasHydrated, checkAuth } = useAuthStore();
+  const { isAuthenticated, checkAuth } = useAuthStore();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    // Check auth and mark as ready
     checkAuth();
+    // Give a moment for zustand persist to hydrate from localStorage
+    const timer = setTimeout(() => setIsReady(true), 100);
+    return () => clearTimeout(timer);
   }, [checkAuth]);
 
   useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
+    // Only redirect after we're ready and confirmed not authenticated
+    if (isReady && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [_hasHydrated, isAuthenticated, router]);
+  }, [isReady, isAuthenticated, router]);
 
-  // Show loading state while checking authentication
-  if (!_hasHydrated) {
+  // Show loading while checking auth
+  if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
         <div className="text-center">
@@ -34,6 +40,7 @@ export default function PrivateRoute({
     );
   }
 
+  // Redirect happening, show nothing
   if (!isAuthenticated) {
     return null;
   }
