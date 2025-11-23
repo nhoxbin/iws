@@ -18,8 +18,11 @@ class PostResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $user = $request->user();
+
         return [
             'id' => $this->id,
+            'slug' => $this->slug,
             'title' => $this->title,
             'question' => $this->question,
             'created_at' => $this->created_at->toDateTimeString(),
@@ -27,6 +30,10 @@ class PostResource extends JsonResource
             'is_resolved' => $this->is_resolved,
             'answers_count' => $this->answers()->count(),
             'views_count' => $this->views_count ?? 0,
+            'upvotes_count' => $this->upvotes_count ?? 0,
+            'downvotes_count' => $this->downvotes_count ?? 0,
+            'user_vote' => $user ? $this->getUserVote($user->id)?->vote_type : null,
+            'is_saved' => $user ? $user->savedPosts()->where('post_id', $this->id)->exists() : false,
             'user' => new UserResource($this->whenLoaded('user')),
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'category' => new CategoryResource($this->whenLoaded('category')),

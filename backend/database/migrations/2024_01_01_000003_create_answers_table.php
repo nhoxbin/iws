@@ -16,15 +16,21 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->text('answer');
-            $table->integer('helpful_count')->default(0);
+            $table->integer('upvotes_count')->default(0);
+            $table->integer('downvotes_count')->default(0);
+            $table->boolean('is_helpful')->default(false);
             $table->timestamps();
+
+            $table->index(['post_id', 'created_at']);
+            $table->index('user_id');
         });
 
-        // Create a pivot table for users who marked answers as helpful
-        Schema::create('answer_helpful', function (Blueprint $table) {
+        // Answer votes table
+        Schema::create('answer_votes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('answer_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->enum('vote_type', ['upvote', 'downvote']);
             $table->timestamps();
 
             $table->unique(['answer_id', 'user_id']);
@@ -36,7 +42,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('answer_helpful');
+        Schema::dropIfExists('answer_votes');
         Schema::dropIfExists('answers');
     }
 };

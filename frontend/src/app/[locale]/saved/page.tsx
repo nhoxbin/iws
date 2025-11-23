@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PrivateRoute from '@/components/private-route';
 import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
+import { formatDate } from '@/lib/date-utils';
 
 interface Tag {
   id: number;
@@ -25,6 +26,7 @@ interface User {
 
 interface Question {
   id: number;
+  slug: string;
   title: string;
   question: string;
   created_at: string;
@@ -78,28 +80,6 @@ function SavedPage() {
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Failed to unsave question');
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-    if (diffInDays === 0) {
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      if (diffInHours === 0) {
-        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-        return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
-      }
-      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-    } else if (diffInDays === 1) {
-      return 'Yesterday';
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
   };
 
@@ -171,7 +151,7 @@ function SavedPage() {
                     <div className="flex-1 min-w-0">
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <Link
-                          href={`/questions/${question.id}`}
+                          href={`/questions/${question.slug}`}
                           className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-2 flex-1"
                         >
                           {question.title}

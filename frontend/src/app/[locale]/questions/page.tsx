@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { HelpCircle, Plus, Clock, Tag as TagIcon } from 'lucide-react';
+import { HelpCircle, Plus, Tag as TagIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
+import { formatDate } from '@/lib/date-utils';
 
 interface Tag {
   id: number;
@@ -25,6 +27,7 @@ interface User {
 
 interface Question {
   id: number;
+  slug: string;
   title: string;
   question: string;
   created_at: string;
@@ -44,21 +47,41 @@ interface PaginationMeta {
 }
 
 export default function QuestionsPage() {
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams.get('search') || '';
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [searchText, setSearchText] = useState<string>(urlSearch);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
 
   useEffect(() => {
     fetchCategories();
+    fetchTags();
   }, []);
+
+  // Update searchText when URL search param changes
+  useEffect(() => {
+    setSearchText(urlSearch);
+  }, [urlSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchQuestions(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchText, selectedCategory, selectedTag]);
 
   useEffect(() => {
     fetchQuestions(currentPage);
-  }, [currentPage, selectedCategory]);
+  }, [currentPage]);
 
   const fetchCategories = async () => {
     try {
@@ -69,12 +92,28 @@ export default function QuestionsPage() {
     }
   };
 
+  const fetchTags = async () => {
+    try {
+      const response = await api.get('/tags');
+      setTags(response.data.data || []);
+    } catch (err) {
+      console.error('Error fetching tags:', err);
+    }
+  };
+
   const fetchQuestions = async (page: number) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await api.get(`/posts?page=${page}`);
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+
+      if (searchText) params.append('search', searchText);
+      if (selectedCategory) params.append('category', selectedCategory);
+      if (selectedTag) params.append('tag', selectedTag);
+
+      const response = await api.get(`/posts?${params.toString()}`);
       setQuestions(response.data.data || []);
       setPagination(response.data.meta);
     } catch (err) {
@@ -85,32 +124,6 @@ export default function QuestionsPage() {
       setLoading(false);
     }
   };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-    if (diffInDays === 0) {
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      if (diffInHours === 0) {
-        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-        return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
-      }
-      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-    } else if (diffInDays === 1) {
-      return 'Yesterday';
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-  };
-
-  const filteredQuestions = selectedCategory === 'all'
-    ? questions
-    : questions.filter(q => q.category?.name === selectedCategory);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -139,31 +152,61 @@ export default function QuestionsPage() {
             </Link>
           </div>
 
-          {/* Category Filter */}
-          <div className="mb-6 flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                selectedCategory === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-            >
-              All
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.name)}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  selectedCategory === category.name
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
+          {/* Search Filters */}
+          <div className="mb-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Search Text Input */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Search
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search questions..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Category Filter */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Category
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tag Filter */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Tag
+                </label>
+                <select
+                  value={selectedTag}
+                  onChange={(e) => setSelectedTag(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Tags</option>
+                  {tags.map((tag) => (
+                    <option key={tag.id} value={tag.id}>
+                      {tag.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Loading State */}
@@ -188,9 +231,9 @@ export default function QuestionsPage() {
           )}
 
           {/* Questions List */}
-          {!loading && !error && filteredQuestions.length > 0 && (
+          {!loading && !error && questions.length > 0 && (
             <div className="space-y-4">
-              {filteredQuestions.map((question) => (
+              {questions.map((question) => (
                 <article
                   key={question.id}
                   className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition p-6"
@@ -214,13 +257,38 @@ export default function QuestionsPage() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
+                      {/* Category Badge */}
+                      {question.category && (
+                        <div className="mb-2">
+                          <span className="inline-flex items-center px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
+                            {question.category.name}
+                          </span>
+                        </div>
+                      )}
+
                       <div className="mb-3">
                         <Link
-                          href={`/questions/${question.id}`}
+                          href={`/questions/${question.slug}`}
                           className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-2"
                         >
                           {question.title}
                         </Link>
+                      </div>
+
+                      {/* Author & Time */}
+                      <div className="flex items-center gap-2 text-sm mb-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                          {question.user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <span className="text-slate-900 dark:text-white font-medium">
+                            {question.user.name}
+                          </span>
+                          <span className="text-slate-500 dark:text-slate-400 mx-1">•</span>
+                          <span className="text-slate-500 dark:text-slate-400">
+                            Posted {formatDate(question.created_at)}
+                          </span>
+                        </div>
                       </div>
 
                       <p className="text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
@@ -229,7 +297,7 @@ export default function QuestionsPage() {
 
                       {/* Tags */}
                       {question.tags && question.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
+                        <div className="flex flex-wrap gap-2">
                           {question.tags.map((tag) => (
                             <span
                               key={tag.id}
@@ -241,38 +309,6 @@ export default function QuestionsPage() {
                           ))}
                         </div>
                       )}
-
-                      {/* Category Badge */}
-                      {question.category && (
-                        <div className="mb-4">
-                          <span className="inline-flex items-center px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
-                            {question.category.name}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Footer */}
-                      <div className="flex flex-wrap items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                            {question.user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="text-slate-900 dark:text-white font-medium">
-                              {question.user.name}
-                            </div>
-                            {question.user.role && (
-                              <div className="text-xs text-slate-500 dark:text-slate-400">
-                                {question.user.role}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                          <Clock className="w-4 h-4" />
-                          <span>Posted {formatDate(question.created_at)}</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </article>
@@ -281,7 +317,7 @@ export default function QuestionsPage() {
           )}
 
           {/* Empty State */}
-          {!loading && !error && filteredQuestions.length === 0 && (
+          {!loading && !error && questions.length === 0 && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-12 text-center">
               <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <HelpCircle className="w-10 h-10 text-slate-400" />
@@ -290,9 +326,9 @@ export default function QuestionsPage() {
                 No questions found
               </h2>
               <p className="text-slate-600 dark:text-slate-400 mb-6">
-                {selectedCategory === 'all'
-                  ? 'Be the first to ask a question!'
-                  : `No questions in ${selectedCategory} category yet.`}
+                {searchText || selectedCategory || selectedTag
+                  ? 'Try adjusting your search filters.'
+                  : 'Be the first to ask a question!'}
               </p>
               <Link
                 href="/ask-question"

@@ -35,23 +35,34 @@ function ProfilePage() {
     try {
       setLoading(true);
 
-      // Fetch user's questions
+      // Get current user
+      const userResponse = await api.get('/auth/me');
+      const currentUserId = userResponse.data.id;
+
+      // Fetch all posts to get user's questions and answers
       const postsResponse = await api.get('/posts');
-      const userPosts = postsResponse.data.data.filter((post: any) => post.user.id === user?.id);
+      const allPosts = postsResponse.data.data;
 
-      // Fetch user's answers (we'll need to iterate through questions)
-      const answersResponse = await api.get('/posts');
-      const allPosts = answersResponse.data.data;
+      // Filter user's questions
+      const userPosts = allPosts.filter((post: any) => post.user.id === currentUserId);
 
+      // Extract user's answers from all posts
       const userAnswers: any[] = [];
+      let totalHelpfulMarks = 0;
+
       for (const post of allPosts) {
         if (post.answers && post.answers.length > 0) {
-          const userAnswersInPost = post.answers.filter((answer: any) => answer.user.id === user?.id);
+          const userAnswersInPost = post.answers.filter((answer: any) => answer.user.id === currentUserId);
           userAnswers.push(...userAnswersInPost.map((ans: any) => ({
             ...ans,
             post_title: post.title,
             post_id: post.id,
+            post_slug: post.slug,
           })));
+          // Count upvotes
+          userAnswersInPost.forEach((ans: any) => {
+            totalHelpfulMarks += ans.upvotes_count || 0;
+          });
         }
       }
 
@@ -64,7 +75,7 @@ function ProfilePage() {
           id: post.id,
           type: 'question',
           title: post.title,
-          post_id: post.id,
+          post_id: post.slug || post.id,
           created_at: post.created_at,
           is_answered: (post.answers_count || 0) > 0,
         });
@@ -76,7 +87,7 @@ function ProfilePage() {
           id: answer.id,
           type: 'answer',
           title: answer.post_title,
-          post_id: answer.post_id,
+          post_id: answer.post_slug || answer.post_id,
           created_at: answer.created_at,
         });
       });
@@ -88,7 +99,7 @@ function ProfilePage() {
       setStats({
         questionsCount: userPosts.length,
         answersCount: userAnswers.length,
-        helpfulMarksCount: userAnswers.reduce((sum: number, ans: any) => sum + (ans.helpful_count || 0), 0),
+        helpfulMarksCount: totalHelpfulMarks,
       });
     } catch (error) {
       console.error('Error fetching activity:', error);
@@ -199,7 +210,7 @@ function ProfilePage() {
                   <div className="text-3xl font-bold text-white">{stats.answersCount}</div>
                 </div>
                 <div>
-                  <h3 className="text-slate-400 text-sm mb-1">Helpful Marks</h3>
+                  <h3 className="text-slate-400 text-sm mb-1">Total Upvotes</h3>
                   <div className="text-3xl font-bold text-white">{stats.helpfulMarksCount}</div>
                 </div>
               </div>
@@ -224,26 +235,36 @@ function ProfilePage() {
             )}
 
             {!loading && activities.length > 0 && (
-              <div className="space-y-6">
-                {activities.map((activity) => (
-                  <Link
-                    key={`${activity.type}-${activity.id}`}
-                    href={`/questions/${activity.post_id}`}
-                    className="flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 p-3 rounded-lg transition -mx-3"
-                  >
-                    <div className="flex-shrink-0 mt-1">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-medium mb-1 line-clamp-2">
-                        {activity.title}
-                      </h3>
-                      <p className="text-slate-400 text-sm">
-                        {activity.type === 'question' ? 'Asked' : getActivityLabel(activity)} · {formatDate(activity.created_at)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-700"></div>
+
+                <div className="space-y-6">
+                  {activities.map((activity, index) => (
+                    <Link
+                      key={`${activity.type}-${activity.id}`}
+                      href={`/questions/${activity.post_id}`}
+                      className="flex gap-4 hover:bg-slate-900/50 p-3 rounded-lg transition -mx-3 relative"
+                    >
+                      {/* Timeline dot */}
+                      <div className="flex-shrink-0 relative z-10">
+                        <div className={`w-4 h-4 rounded-full border-2 border-slate-950 ${
+                          activity.type === 'question' ? 'bg-blue-500' :
+                          activity.type === 'answer' ? 'bg-green-500' : 'bg-purple-500'
+                        }`}></div>
+                      </div>
+
+                      <div className="flex-1 min-w-0 -ml-2">
+                        <h3 className="text-white font-medium mb-1 line-clamp-2">
+                          {activity.title}
+                        </h3>
+                        <p className="text-slate-400 text-sm">
+                          {formatDate(activity.created_at)}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 

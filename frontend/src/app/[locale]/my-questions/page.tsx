@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PrivateRoute from '@/components/private-route';
 import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
+import { formatDate } from '@/lib/date-utils';
 
 interface Tag {
   id: number;
@@ -25,6 +26,7 @@ interface User {
 
 interface Question {
   id: number;
+  slug: string;
   title: string;
   question: string;
   created_at: string;
@@ -144,28 +146,6 @@ function MyQuestionsPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-    if (diffInDays === 0) {
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      if (diffInHours === 0) {
-        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-        return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
-      }
-      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-    } else if (diffInDays === 1) {
-      return 'Yesterday';
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <AppHeader />
@@ -266,94 +246,102 @@ function MyQuestionsPage() {
           {/* Questions List */}
           {!loading && !error && filteredQuestions.length > 0 && (
             <div className="space-y-4">
-              {filteredQuestions.map((question) => (
-                <article
-                  key={question.id}
-                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition p-6"
-                >
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {/* Stats Sidebar */}
-                    <div className="flex sm:flex-col gap-4 sm:gap-3 text-center sm:min-w-[80px]">
-                      <div className="flex-1 sm:flex-none">
-                        <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                          {question.answers_count || 0}
+              {filteredQuestions.map((question) => {
+                const hasAnswers = (question.answers_count || 0) > 0;
+                return (
+                  <article
+                    key={question.id}
+                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition p-6"
+                  >
+                    {/* Top row: Status/Time, Category, and Actions */}
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {/* Status and Time */}
+                        <div className="flex items-center gap-3 text-sm">
+                          <div className={`inline-flex items-center gap-1 ${
+                            hasAnswers
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-amber-600 dark:text-amber-400'
+                          }`}>
+                            <span className={`w-2 h-2 rounded-full ${
+                              hasAnswers ? 'bg-green-600' : 'bg-amber-600'
+                            }`}></span>
+                            <span className="font-medium">{hasAnswers ? 'Answered' : 'Open'}</span>
+                          </div>
+                          <span className="text-slate-500 dark:text-slate-400">·</span>
+                          <span className="text-slate-500 dark:text-slate-400">
+                            Asked {formatDate(question.created_at)}
+                          </span>
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Answers</div>
-                      </div>
-                      <div className="flex-1 sm:flex-none">
-                        <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                          {question.views_count || 0}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Views</div>
-                      </div>
-                      <div className="flex-1 sm:flex-none">
-                        <div className={`px-2 py-1 text-xs font-medium rounded ${
-                          (question.answers_count || 0) > 0
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                        }`}>
-                          {(question.answers_count || 0) > 0 ? 'Answered' : 'Pending'}
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="mb-3">
-                        <Link
-                          href={`/questions/${question.id}`}
-                          className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-2"
-                        >
-                          {question.title}
-                        </Link>
+                        {/* Category Badge */}
+                        {question.category && (
+                          <span className="inline-flex items-center px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
+                            {question.category.name}
+                          </span>
+                        )}
                       </div>
 
-                      <p className="text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
-                        {question.question}
-                      </p>
-
-                      {/* Tags */}
-                      {question.tags && question.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {question.tags.map((tag) => (
-                            <span
-                              key={tag.id}
-                              className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm"
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Footer */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                          <Clock className="w-4 h-4" />
-                          <span>Asked {formatDate(question.created_at)}</span>
-                        </div>
-
+                      {/* Action Buttons - only show if no answers */}
+                      {!hasAnswers && (
                         <div className="flex items-center gap-2">
                           <Link
-                            href={`/questions/${question.id}/edit`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                            href={`/questions/${question.slug}/edit`}
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                            title="Edit"
                           >
-                            <Edit className="w-4 h-4" />
-                            <span>Edit</span>
+                            <Edit className="w-5 h-5" />
                           </Link>
                           <button
                             onClick={() => handleDelete(question.id)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                            title="Delete"
                           >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Delete</span>
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <div className="mb-3">
+                      <Link
+                        href={`/questions/${question.slug}`}
+                        className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-2"
+                      >
+                        {question.title}
+                      </Link>
+                    </div>
+
+                    {/* Question Description */}
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">
+                      {question.question}
+                    </p>
+
+                    {/* Tags */}
+                    {question.tags && question.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {question.tags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm"
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-4 h-4" />
+                        <span>{question.answers_count || 0} Answers</span>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
 

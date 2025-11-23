@@ -1,11 +1,62 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import PrivateRoute from '@/components/private-route';
 import { AppHeader } from '@/components/app-header';
+import api from '@/lib/api';
+import Link from 'next/link';
+import { Clock, MessageSquare, Tag as TagIcon } from 'lucide-react';
+import { formatDate } from '@/lib/date-utils';
+
+interface Tag {
+  id: number;
+  name: string;
+  posts_count: number;
+}
 
 function DashboardPage() {
   const { user } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'posts' | 'unanswered' | 'topic' | 'latest'>('posts');
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [popularTags, setPopularTags] = useState<Tag[]>([]);
+
+  useEffect(() => {
+    fetchQuestions();
+    fetchPopularTags();
+  }, [activeTab]);
+
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+
+      if (activeTab === 'unanswered') {
+        params.append('sort', 'unanswered');
+      } else if (activeTab === 'latest') {
+        params.append('sort', 'latest');
+      }
+
+      const response = await api.get(`/posts?${params.toString()}`);
+      setQuestions(response.data.data || []);
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPopularTags = async () => {
+    try {
+      const response = await api.get('/tags');
+      const tags = response.data.data || [];
+      // Get top 5 most used tags
+      setPopularTags(tags.slice(0, 5));
+    } catch (err) {
+      console.error('Error fetching popular tags:', err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -14,40 +65,47 @@ function DashboardPage() {
       {/* Main Content */}
       <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
 
-        {/* Question Input */}
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 mb-8">
-          <div className="flex gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white flex-shrink-0">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="'Behavioral'..."
-                className="w-full bg-transparent text-white text-lg mb-4 focus:outline-none placeholder:text-slate-500"
-              />
-              <div className="flex gap-2 mb-4">
-                <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm">🏷️</span>
-              </div>
-              <div className="flex justify-end">
-                <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
-                  Submit
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Tabs */}
         <div className="flex gap-4 mb-6">
-          <span className="text-white font-medium">Questions for you:</span>
-          <button className="px-4 py-1 bg-blue-600 text-white rounded-full text-sm">
+          <span className="text-slate-900 dark:text-white font-medium">Questions for you:</span>
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`px-4 py-1 rounded-full text-sm transition ${
+              activeTab === 'posts'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            All Posts
+          </button>
+          <button
+            onClick={() => setActiveTab('unanswered')}
+            className={`px-4 py-1 rounded-full text-sm transition ${
+              activeTab === 'unanswered'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
             Unanswered
           </button>
-          <button className="px-4 py-1 text-slate-400 hover:text-white text-sm">
+          <button
+            onClick={() => setActiveTab('topic')}
+            className={`px-4 py-1 rounded-full text-sm transition ${
+              activeTab === 'topic'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
             By Topic
           </button>
-          <button className="px-4 py-1 text-slate-400 hover:text-white text-sm">
+          <button
+            onClick={() => setActiveTab('latest')}
+            className={`px-4 py-1 rounded-full text-sm transition ${
+              activeTab === 'latest'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
             Latest
           </button>
         </div>
@@ -55,66 +113,84 @@ function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Questions Feed */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Question Card */}
-            <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-              <div className="flex gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-slate-700"></div>
-                <div>
-                  <h3 className="text-white font-semibold">Jane Doe</h3>
-                  <span className="text-sm text-green-400">Junior</span>
-                </div>
+            {loading && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-12 text-center">
+                <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">Loading questions...</p>
               </div>
-              <h2 className="text-xl text-white font-semibold mb-3">
-                How would you design a distributed caching system for a high-traffic e-commerce site?
-              </h2>
-              <p className="text-slate-400 mb-4 text-sm leading-relaxed">
-                I&apos;m preparing for a senior backend role and need to understand the trade-offs between
-                different caching strategies like write-through, write-back, and cache-aside. What are
-                the key considerations for scalability and data consistency?
-              </p>
-              <div className="flex gap-2 mb-6">
-                <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm">
-                  System Design
-                </span>
-                <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm">
-                  Caching
-                </span>
-                <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm">
-                  Scalability
-                </span>
-              </div>
+            )}
 
-              {/* Answer */}
-              <div className="border-t border-slate-700 pt-6">
-                <div className="flex gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-slate-700"></div>
-                  <div>
-                    <h4 className="text-white font-semibold">Alex Smith</h4>
-                    <span className="text-sm text-blue-400">Senior</span>
-                  </div>
-                </div>
-                <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                  For a high-traffic e-commerce site, a cache-aside (or lazy-loading) strategy is
-                  often the best starting point. It provides a good balance between performance
-                  and data consistency... The key is to use a distributed cache like Redis or
-                  Memcached to handle the load and ensure replicas for high availability.
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <span key={i} className="text-yellow-500">★</span>
-                    ))}
-                    <span className="text-slate-600">★</span>
-                  </div>
-                  <button className="text-sm text-slate-400 hover:text-white">
-                    👍 Helpful
-                  </button>
-                  <button className="text-sm text-slate-400 hover:text-white">
-                    👎 Not Helpful
-                  </button>
-                </div>
+            {!loading && questions.length === 0 && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-12 text-center">
+                <p className="text-slate-600 dark:text-slate-400">No questions found.</p>
               </div>
-            </div>
+            )}
+
+            {!loading && questions.map((question: any) => (
+              <article
+                key={question.id}
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition p-6"
+              >
+                {/* Category Badge */}
+                {question.category && (
+                  <div className="mb-2">
+                    <span className="inline-flex items-center px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
+                      {question.category.name}
+                    </span>
+                  </div>
+                )}
+
+                <Link
+                  href={`/questions/${question.slug}`}
+                  className="block mb-3"
+                >
+                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-2">
+                    {question.title}
+                  </h2>
+                </Link>
+
+                {/* Author & Time */}
+                <div className="flex items-center gap-2 text-sm mb-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                    {question.user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <span className="text-slate-900 dark:text-white font-medium">
+                      {question.user.name}
+                    </span>
+                    <span className="text-slate-500 dark:text-slate-400 mx-1">•</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Posted {formatDate(question.created_at)}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
+                  {question.question}
+                </p>
+
+                {/* Tags */}
+                {question.tags && question.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {question.tags.map((tag: any) => (
+                      <span
+                        key={tag.id}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-sm"
+                      >
+                        <TagIcon className="w-3 h-3" />
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Answer Count */}
+                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>{question.answers_count || 0} answers</span>
+                </div>
+              </article>
+            ))}
           </div>
 
           {/* Sidebar */}
@@ -123,11 +199,20 @@ function DashboardPage() {
             <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
               <h3 className="text-white font-semibold mb-4">Popular Tags</h3>
               <div className="space-y-2">
-                <div className="text-slate-300 text-sm">#SystemDesign</div>
-                <div className="text-slate-300 text-sm">#DataStructures</div>
-                <div className="text-slate-300 text-sm">#Behavioral</div>
-                <div className="text-slate-300 text-sm">#Java</div>
-                <div className="text-slate-300 text-sm">#ProductManagement</div>
+                {popularTags.length > 0 ? (
+                  popularTags.map((tag) => (
+                    <Link
+                      key={tag.id}
+                      href={`/questions?search=${encodeURIComponent(tag.name)}`}
+                      className="flex justify-between items-center text-slate-300 text-sm hover:text-blue-400 transition"
+                    >
+                      <span>#{tag.name}</span>
+                      <span className="text-slate-500 text-xs">{tag.posts_count}</span>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-slate-400 text-sm">No tags yet</p>
+                )}
               </div>
             </div>
 

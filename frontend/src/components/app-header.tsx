@@ -128,22 +128,18 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
     }
   };
 
-  // Debounced search function
-  const debounceSearch = useCallback((value: string) => {
-    // Implement your search logic here
-    console.log('Searching for:', value);
-  }, []);
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/questions?search=${encodeURIComponent(searchQuery)}`);
+      setIsSearchExpanded(false);
+      setSearchQuery('');
+    }
+  };
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-
-    // Simple debounce implementation
-    const timeoutId = setTimeout(() => {
-      debounceSearch(value);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
   };
 
   return (
@@ -200,14 +196,19 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
           {/* Left: Navigation Menu */}
           <nav className="flex items-center gap-1">
             {menuItems.map((item) => {
-              const isActive = pathname === item.href;
+              // Extract path without locale (e.g., /en/dashboard -> /dashboard)
+              const pathWithoutLocale = pathname?.replace(/^\/[a-z]{2}/, '') || pathname;
+              // For dashboard, only match exact path. For others, match if path starts with href
+              const isActive = item.href === '/dashboard'
+                ? pathWithoutLocale === item.href || pathWithoutLocale === '' || pathWithoutLocale === '/'
+                : pathWithoutLocale === item.href || pathWithoutLocale?.startsWith(item.href + '/');
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                     isActive
-                      ? 'text-blue-600 dark:text-blue-400 bg-blue-500/10'
+                      ? 'text-white bg-blue-600 dark:bg-blue-600'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                   title={item.label}
@@ -401,14 +402,19 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-50">
         <div className="flex items-center justify-around h-16 px-2">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href;
+            // Extract path without locale (e.g., /en/dashboard -> /dashboard)
+            const pathWithoutLocale = pathname?.replace(/^\/[a-z]{2}/, '') || pathname;
+            // For dashboard, only match exact path. For others, match if path starts with href
+            const isActive = item.href === '/dashboard'
+              ? pathWithoutLocale === item.href || pathWithoutLocale === '' || pathWithoutLocale === '/'
+              : pathWithoutLocale === item.href || pathWithoutLocale?.startsWith(item.href + '/');
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center justify-center flex-1 py-2 transition ${
                   isActive
-                    ? 'text-blue-600 dark:text-blue-400'
+                    ? 'text-blue-600 dark:text-blue-400 font-semibold'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}
                 title={item.label}
@@ -428,7 +434,7 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
           <div
             className="fixed top-14 md:top-16 left-0 md:left-20 right-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-lg z-50 animate-slideDown"
           >
-            <div className="p-4 md:p-6">
+            <form onSubmit={handleSearchSubmit} className="p-4 md:p-6">
               <div className="relative max-w-3xl mx-auto">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 w-5 h-5" />
                 <input
@@ -441,17 +447,20 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       toggleSearch();
+                    } else if (e.key === 'Enter') {
+                      handleSearchSubmit();
                     }
                   }}
                 />
                 <button
+                  type="button"
                   onClick={toggleSearch}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 px-3 py-1 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-slate-200 dark:bg-slate-700 rounded"
                 >
                   ESC
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </>
       )}

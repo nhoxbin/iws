@@ -62,13 +62,13 @@ function AskQuestionPage() {
     try {
       const response = await api.post('/posts', {
         title,
-        body: question,
+        question,
         category_id: parseInt(categoryId),
         tags: tags.map(tag => ({ name: tag }))
       });
 
       // Redirect to the created post or questions page
-      router.push(`/questions/${response.data.data.id}`);
+      router.push(`/questions/${response.data.data.slug}`);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to submit question. Please try again.');

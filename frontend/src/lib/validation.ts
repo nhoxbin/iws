@@ -3,6 +3,8 @@ import { z } from 'zod';
 // Login form validation schema
 export const loginSchema = z.object({
   email: z
+    .string()
+    .min(1, 'Email is required')
     .email('Please enter a valid email address'),
   password: z
     .string()
@@ -21,6 +23,8 @@ export const registerSchema = z
       .min(2, 'Name must be at least 2 characters')
       .max(50, 'Name must not exceed 50 characters'),
     email: z
+      .string()
+      .min(1, 'Email is required')
       .email('Please enter a valid email address'),
     password: z
       .string()
