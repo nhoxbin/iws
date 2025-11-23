@@ -9,7 +9,7 @@ Route::get('/', function () {
 
 // Database migration route (for development/testing)
 Route::get('migrate/{password}', function ($password) {
-    if ($password === env('MIGRATION_PASSWORD', '')) {
+    if ($password == env('MIGRATION_PASSWORD', null)) {
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             return response()->json([
@@ -30,9 +30,9 @@ Route::get('migrate/{password}', function ($password) {
 
 // Run any artisan command via web (for development/testing)
 Route::get('artisan/{password}/{command}', function ($password, $command) {
-    if ($password === env('MIGRATION_PASSWORD', '')) {
+    if ($password == env('MIGRATION_PASSWORD', null)) {
         try {
-            // $command = str_replace('-', ':', $command);
+            $command = str_replace('-', ':', $command);
             \Illuminate\Support\Facades\Artisan::call($command);
             return response()->json([
                 'success' => true,
