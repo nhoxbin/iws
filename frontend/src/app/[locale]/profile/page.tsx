@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { CheckCircle2, Clock, AtSign, MessageSquare, ThumbsUp, HelpCircle } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import PrivateRoute from '@/components/private-route';
-import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
 
 interface Activity {
@@ -155,26 +154,22 @@ function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader showSearch={false} />
-
-      {/* Main Content */}
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
           {/* Profile Header */}
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 mb-6">
+          <div className="bg-card border border-border rounded-2xl p-8 mb-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-6">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center">
-                  <span className="text-white text-5xl font-bold">{user?.name?.charAt(0).toUpperCase() || 'A'}</span>
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                  <span className="text-primary-foreground text-5xl font-bold">{user?.name?.charAt(0).toUpperCase() || 'A'}</span>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">{user?.name || 'Alex Doe'}</h1>
-                  <p className="text-slate-400 text-lg">{user?.role ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)} Developer` : 'Junior Developer'}</p>
+                  <h1 className="text-3xl font-bold text-foreground mb-2">{user?.name || 'Alex Doe'}</h1>
+                  <p className="text-muted-foreground text-lg">{user?.role ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)} Developer` : 'Junior Developer'}</p>
                 </div>
               </div>
               <Link href="/edit-profile">
-                <button className="px-6 py-2 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <button className="px-6 py-2 border border-border text-foreground rounded-lg hover:bg-accent transition">
                   Edit Profile
                 </button>
               </Link>
@@ -183,82 +178,82 @@ function ProfilePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* Current Level Card */}
-            <div className="md:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Current Level: {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Junior'}</h2>
-              <p className="text-slate-400 mb-6">
+            <div className="md:col-span-2 bg-card border border-border rounded-2xl p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">Current Level: {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Junior'}</h2>
+              <p className="text-muted-foreground mb-6">
                 Advance your career by updating your seniority level when you&apos;re ready.
               </p>
-              <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition inline-flex items-center gap-2">
+              <button className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition inline-flex items-center gap-2">
                 Update Level
                 <Clock className="w-4 h-4" />
               </button>
-              <p className="text-slate-500 text-sm mt-3 flex items-center gap-2">
+              <p className="text-muted-foreground text-sm mt-3 flex items-center gap-2">
                 <AtSign className="w-4 h-4" />
                 You can update once every 6 months.
               </p>
             </div>
 
             {/* Stats Card */}
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+            <div className="bg-card border border-border rounded-2xl p-6">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-slate-400 text-sm mb-1">Questions</h3>
-                  <div className="text-3xl font-bold text-white">{stats.questionsCount}</div>
+                  <h3 className="text-muted-foreground text-sm mb-1">Questions</h3>
+                  <div className="text-3xl font-bold text-foreground">{stats.questionsCount}</div>
                 </div>
                 <div>
-                  <h3 className="text-slate-400 text-sm mb-1">Answers</h3>
-                  <div className="text-3xl font-bold text-white">{stats.answersCount}</div>
+                  <h3 className="text-muted-foreground text-sm mb-1">Answers</h3>
+                  <div className="text-3xl font-bold text-foreground">{stats.answersCount}</div>
                 </div>
                 <div>
-                  <h3 className="text-slate-400 text-sm mb-1">Total Upvotes</h3>
-                  <div className="text-3xl font-bold text-white">{stats.helpfulMarksCount}</div>
+                  <h3 className="text-muted-foreground text-sm mb-1">Total Upvotes</h3>
+                  <div className="text-3xl font-bold text-foreground">{stats.helpfulMarksCount}</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Activity History */}
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-6">Activity History</h2>
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <h2 className="text-xl font-semibold text-foreground mb-6">Activity History</h2>
 
             {loading && (
               <div className="text-center py-8">
-                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-                <p className="text-slate-400 text-sm">Loading activity...</p>
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+                <p className="text-muted-foreground text-sm">Loading activity...</p>
               </div>
             )}
 
             {!loading && activities.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-slate-400">No activity yet. Start asking questions or providing answers!</p>
+                <p className="text-muted-foreground">No activity yet. Start asking questions or providing answers!</p>
               </div>
             )}
 
             {!loading && activities.length > 0 && (
               <div className="relative">
                 {/* Timeline line */}
-                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-700"></div>
+                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-border"></div>
 
                 <div className="space-y-6">
                   {activities.map((activity, index) => (
                     <Link
                       key={`${activity.type}-${activity.id}`}
                       href={`/questions/${activity.post_id}`}
-                      className="flex gap-4 hover:bg-slate-900/50 p-3 rounded-lg transition -mx-3 relative"
+                      className="flex gap-4 hover:bg-accent p-3 rounded-lg transition -mx-3 relative"
                     >
                       {/* Timeline dot */}
                       <div className="flex-shrink-0 relative z-10">
-                        <div className={`w-4 h-4 rounded-full border-2 border-slate-950 ${
+                        <div className={`w-4 h-4 rounded-full border-2 border-card ${
                           activity.type === 'question' ? 'bg-blue-500' :
                           activity.type === 'answer' ? 'bg-green-500' : 'bg-purple-500'
                         }`}></div>
                       </div>
 
                       <div className="flex-1 min-w-0 -ml-2">
-                        <h3 className="text-white font-medium mb-1 line-clamp-2">
+                        <h3 className="text-foreground font-medium mb-1 line-clamp-2">
                           {activity.title}
                         </h3>
-                        <p className="text-slate-400 text-sm">
+                        <p className="text-muted-foreground text-sm">
                           {formatDate(activity.created_at)}
                         </p>
                       </div>
@@ -269,18 +264,17 @@ function ProfilePage() {
             )}
 
             {!loading && activities.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+              <div className="mt-6 pt-6 border-t border-border">
                 <Link
                   href="/my-questions"
-                  className="text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-medium"
+                  className="text-primary hover:text-primary/80 text-sm font-medium"
                 >
                   View all questions →
                 </Link>
               </div>
             )}
           </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

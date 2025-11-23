@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { HelpCircle, Plus, Clock, MessageSquare, Eye, Bookmark, Edit, Trash2, Search } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import PrivateRoute from '@/components/private-route';
-import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/date-utils';
 
@@ -147,11 +146,7 @@ function MyQuestionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader />
-
-      {/* Main Content */}
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -415,7 +410,6 @@ function MyQuestionsPage() {
             </div>
           )}
         </div>
-      </main>
     </div>
   );
 }

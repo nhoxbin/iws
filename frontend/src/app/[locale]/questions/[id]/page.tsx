@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter, Link } from '@/lib/navigation';
 import {
   Clock,
   Tag as TagIcon,
@@ -15,8 +16,6 @@ import {
   Trash2,
   Reply
 } from 'lucide-react';
-import Link from 'next/link';
-import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/date-utils';
 
@@ -82,7 +81,7 @@ interface Question {
 export default function QuestionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const questionId = params.id as string;
+  const questionId = params?.id as string;
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
@@ -257,26 +256,21 @@ export default function QuestionDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-        <AppHeader />
-        <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
+      <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-12 text-center">
               <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
               <p className="text-slate-600 dark:text-slate-400">Loading question...</p>
             </div>
-          </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   if (error || !question) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-        <AppHeader />
-        <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
+      <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center">
               <p className="text-red-600 dark:text-red-400">{error || 'Question not found'}</p>
               <Link
@@ -286,18 +280,14 @@ export default function QuestionDetailPage() {
                 Back to Questions
               </Link>
             </div>
-          </div>
-        </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader />
-
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
           {/* Breadcrumb */}
           <nav className="mb-6 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
             <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
@@ -670,8 +660,7 @@ export default function QuestionDetailPage() {
               </Link>
             </div>
           )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

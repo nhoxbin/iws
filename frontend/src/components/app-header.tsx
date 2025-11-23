@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, memo } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Search, Bell, Home, HelpCircle, Bookmark, BarChart3, ChevronDown, User, LogOut } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { Link, useRouter, usePathname } from '@/lib/navigation';
 import api from '@/lib/api';
+import { useNotifications } from '@/hooks/use-cached-data';
 
 interface MenuItem {
   label: string;
@@ -25,7 +25,7 @@ const defaultMenuItems: MenuItem[] = [
   { label: 'Leaderboard', icon: <BarChart3 className="w-5 h-5" />, href: '/leaderboard' },
 ];
 
-export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: AppHeaderProps) {
+function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }: AppHeaderProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -33,56 +33,19 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<Array<{
-    id: number;
-    type: string;
-    message: string;
-    post_id: number | null;
-    read: boolean;
-    created_at: string;
-    post?: { id: number; title: string };
-  }>>([]);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
-  const fetchUnreadCount = useCallback(async () => {
-    try {
-      const response = await api.get('/notifications/unread-count');
-      setUnreadCount(response.data.count || 0);
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
-    }
-  }, []);
-
-  const fetchNotifications = useCallback(async () => {
-    if (notificationsLoading) return;
-
-    try {
-      setNotificationsLoading(true);
-      const response = await api.get('/notifications?limit=5');
-      setNotifications(response.data.data || []);
-      fetchUnreadCount();
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setNotificationsLoading(false);
-    }
-  }, [notificationsLoading, fetchUnreadCount]);
+  // Use SWR cached hook for notifications (auto-refreshes every 30 seconds)
+  const { notifications, unreadCount, isLoading: notificationsLoading, mutate: mutateNotifications } = useNotifications(5);
 
   const handleNotificationClick = () => {
     setIsNotificationOpen(!isNotificationOpen);
-    if (!isNotificationOpen && notifications.length === 0) {
-      fetchNotifications();
-    }
   };
 
   const markAsRead = async (id: number) => {
     try {
       await api.post(`/notifications/${id}/read`);
-      setNotifications(notifications.map(n =>
-        n.id === id ? { ...n, read: true } : n
-      ));
-      fetchUnreadCount();
+      // Revalidate notifications cache
+      mutateNotifications();
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -107,14 +70,7 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchUnreadCount();
-      // Poll for unread count every 30 seconds
-      const interval = setInterval(fetchUnreadCount, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [user, fetchUnreadCount]);
+  // SWR automatically handles polling and revalidation
 
   const handleLogout = () => {
     logout();
@@ -196,16 +152,16 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
           {/* Left: Navigation Menu */}
           <nav className="flex items-center gap-1">
             {menuItems.map((item) => {
-              // Extract path without locale (e.g., /en/dashboard -> /dashboard)
-              const pathWithoutLocale = pathname?.replace(/^\/[a-z]{2}/, '') || pathname;
+              // next-intl's usePathname already returns path without locale
               // For dashboard, only match exact path. For others, match if path starts with href
               const isActive = item.href === '/dashboard'
-                ? pathWithoutLocale === item.href || pathWithoutLocale === '' || pathWithoutLocale === '/'
-                : pathWithoutLocale === item.href || pathWithoutLocale?.startsWith(item.href + '/');
+                ? pathname === item.href || pathname === '' || pathname === '/'
+                : pathname === item.href || pathname?.startsWith(item.href + '/');
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                     isActive
                       ? 'text-white bg-blue-600 dark:bg-blue-600'
@@ -268,7 +224,7 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
                         </div>
                       ) : notifications.length > 0 ? (
                         <div className="divide-y divide-slate-200 dark:divide-slate-700">
-                          {notifications.map((notification) => (
+                          {notifications.map((notification: { id: number; type: string; message: string; post_id: number | null; read: boolean; created_at: string; post?: { id: number; title: string } }) => (
                             <div
                               key={notification.id}
                               className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition cursor-pointer ${
@@ -402,16 +358,16 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-50">
         <div className="flex items-center justify-around h-16 px-2">
           {menuItems.map((item) => {
-            // Extract path without locale (e.g., /en/dashboard -> /dashboard)
-            const pathWithoutLocale = pathname?.replace(/^\/[a-z]{2}/, '') || pathname;
+            // next-intl's usePathname already returns path without locale
             // For dashboard, only match exact path. For others, match if path starts with href
             const isActive = item.href === '/dashboard'
-              ? pathWithoutLocale === item.href || pathWithoutLocale === '' || pathWithoutLocale === '/'
-              : pathWithoutLocale === item.href || pathWithoutLocale?.startsWith(item.href + '/');
+              ? pathname === item.href || pathname === '' || pathname === '/'
+              : pathname === item.href || pathname?.startsWith(item.href + '/');
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={`flex flex-col items-center justify-center flex-1 py-2 transition ${
                   isActive
                     ? 'text-blue-600 dark:text-blue-400 font-semibold'
@@ -467,3 +423,5 @@ export function AppHeader({ menuItems = defaultMenuItems, showSearch = true }: A
     </>
   );
 }
+
+export const AppHeader = memo(AppHeaderComponent);

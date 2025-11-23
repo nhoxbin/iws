@@ -25,9 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html suppressHydrationWarning lang="en">
+      <head>
+        <meta name="view-transition" content="same-origin" />
+        <meta name="color-scheme" content="light dark" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 dark:bg-slate-950`}
       >
         <ThemeProvider>{children}</ThemeProvider>
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (

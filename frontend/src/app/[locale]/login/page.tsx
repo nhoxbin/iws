@@ -1,8 +1,8 @@
 'use client';
 
-import Link from "next/link";
+import { Link, useRouter } from "@/lib/navigation";
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { loginSchema, type LoginFormData } from "@/lib/validation";
@@ -40,7 +40,7 @@ export default function LoginPage() {
       const { token } = response.data;
 
       setAuth(token);
-      router.push(`/${locale}/dashboard`);
+      router.push('/dashboard');
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setApiError(error.response?.data?.message || 'Login failed. Please try again.');

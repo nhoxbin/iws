@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Trophy, Medal, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import PrivateRoute from '@/components/private-route';
-import { AppHeader } from '@/components/app-header';
 
 type Category = 'All' | 'Technology' | 'Science' | 'Arts' | 'Business';
 type TimeRange = 'All Time' | 'Monthly' | 'Weekly';
@@ -38,12 +37,8 @@ function LeaderboardPage() {
   const currentUserRank = { rank: 42, reputation: 1280 };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader showSearch={false} />
-
-      {/* Main Content */}
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
               Leaderboard
@@ -196,8 +191,7 @@ function LeaderboardPage() {
               </button>
             </div>
           </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

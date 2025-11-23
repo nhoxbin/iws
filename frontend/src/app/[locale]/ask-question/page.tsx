@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 import { X } from 'lucide-react';
 import PrivateRoute from '@/components/private-route';
-import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
 
 interface Category {
@@ -77,12 +76,8 @@ function AskQuestionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader showSearch={false} />
-
-      {/* Main Content */}
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
               Ask a New Question
@@ -214,8 +209,7 @@ function AskQuestionPage() {
               </button>
             </div>
           </form>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

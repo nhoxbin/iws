@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Bookmark, Home, Clock, Eye, MessageSquare, X } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import PrivateRoute from '@/components/private-route';
-import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/date-utils';
 
@@ -84,12 +83,8 @@ function SavedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader />
-
-      {/* Main Content */}
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-3">
@@ -247,8 +242,7 @@ function SavedPage() {
               </button>
             </div>
           )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

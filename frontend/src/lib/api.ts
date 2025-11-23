@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { isTokenExpired } from './jwt';
+import { navigationEvents } from './navigation-events';
 
 const API_BASE_URL = process.env.NODE_ENV === 'development'
   ? 'http://127.0.0.1:8000/api'
@@ -34,7 +35,7 @@ api.interceptors.request.use(
       if (isTokenExpired(token)) {
         // Token is expired, clear auth storage
         localStorage.removeItem('auth-storage');
-        window.location.href = '/login';
+        navigationEvents.requireAuth();
         return Promise.reject(new Error('Token expired'));
       }
 
@@ -89,7 +90,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, clear auth and redirect to login
         localStorage.removeItem('auth-storage');
-        window.location.href = '/login';
+        navigationEvents.requireAuth();
         return Promise.reject(refreshError);
       }
     }

@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Bell, Check, MessageSquare, ThumbsUp, HelpCircle, X } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import PrivateRoute from '@/components/private-route';
-import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
 
 interface User {
@@ -107,11 +106,8 @@ function NotificationsPage() {
     : notifications.filter(n => !n.read);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader />
-
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -244,8 +240,7 @@ function NotificationsPage() {
               </p>
             </div>
           )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

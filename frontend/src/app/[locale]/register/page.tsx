@@ -1,8 +1,7 @@
 'use client';
 
-import Link from "next/link";
+import { Link, useRouter } from "@/lib/navigation";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { registerSchema, type RegisterFormData } from "@/lib/validation";

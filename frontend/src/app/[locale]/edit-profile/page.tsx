@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import { X } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';

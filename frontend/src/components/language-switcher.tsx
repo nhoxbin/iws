@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from '@/lib/navigation';
 import { Globe } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { Locale } from '@/lib/i18n';
@@ -19,11 +19,9 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
 
   const changeLanguage = (newLocale: Locale) => {
     startTransition(() => {
-      // Remove the current locale from pathname if it exists
-      const pathnameWithoutLocale = pathname.replace(/^\/(en|vi)/, '') || '/';
-      // Add new locale to path only if it's not the default
-      const newPath = newLocale === 'en' ? pathnameWithoutLocale : `/${newLocale}${pathnameWithoutLocale}`;
-      router.replace(newPath);
+      // next-intl's usePathname already returns path without locale
+      // Just use router.replace with locale option
+      router.replace(pathname, { locale: newLocale });
       setIsOpen(false);
     });
   };

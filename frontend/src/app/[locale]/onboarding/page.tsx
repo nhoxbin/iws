@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/auth-store';
 import api from '@/lib/api';
 import { Sprout, BookOpen, Settings2, User } from 'lucide-react';

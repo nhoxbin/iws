@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { HelpCircle, Plus, Tag as TagIcon } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/lib/navigation';
 import { useSearchParams } from 'next/navigation';
-import { AppHeader } from '@/components/app-header';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/date-utils';
 
@@ -48,7 +47,7 @@ interface PaginationMeta {
 
 export default function QuestionsPage() {
   const searchParams = useSearchParams();
-  const urlSearch = searchParams.get('search') || '';
+  const urlSearch = searchParams?.get('search') || '';
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,12 +125,8 @@ export default function QuestionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <AppHeader />
-
-      {/* Main Content */}
-      <main className="md:ml-20 mt-14 md:mt-16 pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
+    <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -362,8 +357,7 @@ export default function QuestionsPage() {
               </button>
             </div>
           )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
