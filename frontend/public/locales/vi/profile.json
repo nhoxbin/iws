@@ -1,0 +1,56 @@
+{
+  "profile": {
+    "title": "Hồ sơ",
+    "editProfile": "Chỉnh sửa hồ sơ",
+    "stats": {
+      "questions": "Câu hỏi",
+      "answers": "Câu trả lời",
+      "helpful": "Hữu ích"
+    },
+    "about": "Giới thiệu",
+    "role": "Vai trò",
+    "memberSince": "Thành viên từ",
+    "activity": "Hoạt động",
+    "recentQuestions": "Câu hỏi gần đây",
+    "recentAnswers": "Câu trả lời gần đây"
+  },
+  "editProfile": {
+    "title": "Chỉnh sửa hồ sơ",
+    "subtitle": "Cập nhật thông tin hồ sơ của bạn",
+    "nameLabel": "Họ và tên",
+    "namePlaceholder": "Tên của bạn",
+    "emailLabel": "Email",
+    "emailPlaceholder": "email@example.com",
+    "bioLabel": "Tiểu sử",
+    "bioPlaceholder": "Kể cho chúng tôi về bản thân bạn...",
+    "roleLabel": "Vai trò",
+    "selectRole": "Chọn vai trò của bạn",
+    "saveButton": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "cancelButton": "Hủy"
+  },
+  "onboarding": {
+    "title": "Chào mừng đến với IWS!",
+    "subtitle": "Hãy thiết lập hồ sơ của bạn",
+    "selectRole": "Chọn vai trò của bạn",
+    "roleDescription": "Giúp chúng tôi hiểu mức độ kinh nghiệm của bạn",
+    "fresher": {
+      "title": "Fresher",
+      "description": "Mới bắt đầu sự nghiệp"
+    },
+    "junior": {
+      "title": "Junior",
+      "description": "1-3 năm kinh nghiệm"
+    },
+    "middle": {
+      "title": "Middle",
+      "description": "3-5 năm kinh nghiệm"
+    },
+    "senior": {
+      "title": "Senior",
+      "description": "5+ năm kinh nghiệm"
+    },
+    "continueButton": "Tiếp tục",
+    "skipButton": "Bỏ qua"
+  }
+}

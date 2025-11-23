@@ -1,0 +1,25 @@
+{
+  "welcome": "Chào mừng trở lại, {{name}}!",
+  "subtitle": "Đây là những gì đang diễn ra trong cộng đồng chuyên nghiệp của bạn",
+  "stats": {
+    "myQuestions": "Câu hỏi của tôi",
+    "answers": "Câu trả lời",
+    "saved": "Đã lưu",
+    "helpful": "Hữu ích"
+  },
+  "quickActions": {
+    "title": "Thao tác nhanh",
+    "askQuestion": "Đặt câu hỏi",
+    "browseQuestions": "Duyệt câu hỏi",
+    "viewProfile": "Xem hồ sơ"
+  },
+  "recentActivity": {
+    "title": "Hoạt động gần đây",
+    "noActivity": "Không có hoạt động gần đây",
+    "getStarted": "Bắt đầu đặt hoặc trả lời câu hỏi"
+  },
+  "trending": {
+    "title": "Câu hỏi thịnh hành",
+    "noTrending": "Không có câu hỏi thịnh hành"
+  }
+}

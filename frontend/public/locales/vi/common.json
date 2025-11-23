@@ -1,0 +1,74 @@
+{
+  "appName": "IWS",
+  "menu": {
+    "home": "Trang chủ",
+    "myQuestions": "Câu hỏi của tôi",
+    "saved": "Đã lưu",
+    "leaderboard": "Bảng xếp hạng",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất"
+  },
+  "auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "name": "Họ và tên",
+    "forgotPassword": "Quên mật khẩu?",
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "alreadyHaveAccount": "Đã có tài khoản?",
+    "loginButton": "Đăng nhập",
+    "registerButton": "Đăng ký",
+    "loggingIn": "Đang đăng nhập...",
+    "registering": "Đang tạo tài khoản...",
+    "welcomeBack": "Chào mừng trở lại",
+    "loginSubtitle": "Đăng nhập để tiếp tục hành trình chuyên nghiệp của bạn",
+    "createAccount": "Tạo tài khoản",
+    "registerSubtitle": "Tham gia cộng đồng chuyên gia của chúng tôi"
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "unread": "chưa đọc",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "showAll": "Xem tất cả",
+    "noNotifications": "Chưa có thông báo",
+    "noUnread": "Không có thông báo chưa đọc",
+    "allCaughtUp": "Bạn đã xem hết rồi!",
+    "whenYouGet": "Khi bạn nhận được thông báo, chúng sẽ hiển thị ở đây",
+    "loading": "Đang tải thông báo...",
+    "filters": {
+      "all": "Tất cả",
+      "unread": "Chưa đọc"
+    }
+  },
+  "search": {
+    "placeholder": "Tìm kiếm câu hỏi hoặc chủ đề...",
+    "searching": "Đang tìm kiếm..."
+  },
+  "time": {
+    "minutesAgo": "{{count}} phút trước",
+    "hoursAgo": "{{count}} giờ trước",
+    "daysAgo": "{{count}} ngày trước",
+    "justNow": "Vừa xong"
+  },
+  "actions": {
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "submit": "Gửi",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "loading": "Đang tải...",
+    "saving": "Đang lưu...",
+    "submitting": "Đang gửi..."
+  },
+  "role": {
+    "fresher": "Fresher",
+    "junior": "Junior",
+    "middle": "Middle",
+    "senior": "Senior"
+  }
+}

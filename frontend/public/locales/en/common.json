@@ -1,0 +1,74 @@
+{
+  "appName": "IWS",
+  "menu": {
+    "home": "Home",
+    "myQuestions": "My Questions",
+    "saved": "Saved",
+    "leaderboard": "Leaderboard",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "forgotPassword": "Forgot password?",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginButton": "Log In",
+    "registerButton": "Sign Up",
+    "loggingIn": "Logging in...",
+    "registering": "Creating account...",
+    "welcomeBack": "Welcome Back",
+    "loginSubtitle": "Sign in to continue your professional journey",
+    "createAccount": "Create Account",
+    "registerSubtitle": "Join our community of professionals"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "unread",
+    "markAllRead": "Mark all as read",
+    "showAll": "Show All",
+    "noNotifications": "No notifications yet",
+    "noUnread": "No unread notifications",
+    "allCaughtUp": "You're all caught up!",
+    "whenYouGet": "When you get notifications, they'll show up here",
+    "loading": "Loading notifications...",
+    "filters": {
+      "all": "All",
+      "unread": "Unread"
+    }
+  },
+  "search": {
+    "placeholder": "Search questions or topics...",
+    "searching": "Searching..."
+  },
+  "time": {
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "justNow": "Just now"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "submitting": "Submitting..."
+  },
+  "role": {
+    "fresher": "Fresher",
+    "junior": "Junior",
+    "middle": "Middle",
+    "senior": "Senior"
+  }
+}

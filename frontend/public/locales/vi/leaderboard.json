@@ -1,0 +1,20 @@
+{
+  "title": "Bảng xếp hạng",
+  "subtitle": "Những người đóng góp hàng đầu trong cộng đồng",
+  "tabs": {
+    "allTime": "Mọi thời gian",
+    "thisMonth": "Tháng này",
+    "thisWeek": "Tuần này"
+  },
+  "columns": {
+    "rank": "Hạng",
+    "user": "Người dùng",
+    "questions": "Câu hỏi",
+    "answers": "Trả lời",
+    "helpful": "Hữu ích",
+    "points": "Điểm"
+  },
+  "loading": "Đang tải bảng xếp hạng...",
+  "noData": "Không có dữ liệu",
+  "you": "Bạn"
+}

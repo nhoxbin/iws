@@ -1,0 +1,75 @@
+{
+  "askQuestion": {
+    "title": "Ask a New Question",
+    "subtitle": "Get insights from experienced professionals in your field.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g., How do you approach designing a scalable notification system?",
+    "detailsLabel": "Question Details",
+    "detailsPlaceholder": "Provide detailed information about your question. Include any relevant context, what you've tried, and what specifically you need help with.",
+    "categoryLabel": "Category",
+    "categoryOptional": "(Optional)",
+    "selectCategory": "Select a category",
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "e.g., React, System Design",
+    "tagsHint": "Press comma or enter to add a tag (max 5 tags)",
+    "submitButton": "Submit Question",
+    "submitting": "Submitting..."
+  },
+  "questionsList": {
+    "title": "Questions",
+    "subtitle": "Browse and answer questions from professionals",
+    "askButton": "Ask Question",
+    "filters": {
+      "all": "All Questions",
+      "recent": "Recent",
+      "unanswered": "Unanswered",
+      "resolved": "Resolved"
+    },
+    "sortBy": "Sort by",
+    "noQuestions": "No questions yet",
+    "startAsking": "Be the first to ask a question!",
+    "views": "{{count}} views",
+    "answers": "{{count}} answers",
+    "answer": "{{count}} answer",
+    "loading": "Loading questions..."
+  },
+  "questionDetail": {
+    "views": "views",
+    "answers": "Answers",
+    "noAnswers": "No answers yet",
+    "beFirstAnswer": "Be the first to answer this question",
+    "yourAnswer": "Your Answer",
+    "answerPlaceholder": "Share your knowledge and experience...",
+    "submitAnswer": "Submit Answer",
+    "submittingAnswer": "Submitting...",
+    "editQuestion": "Edit Question",
+    "deleteQuestion": "Delete Question",
+    "markHelpful": "Mark as Helpful",
+    "marked": "Marked",
+    "save": "Save",
+    "saved": "Saved",
+    "resolved": "Resolved"
+  },
+  "myQuestions": {
+    "title": "My Questions",
+    "subtitle": "Manage and track your questions",
+    "askButton": "Ask Question",
+    "tabs": {
+      "all": "All",
+      "unanswered": "Unanswered",
+      "resolved": "Resolved"
+    },
+    "noQuestions": "No questions yet",
+    "startAsking": "Ask your first question to get started",
+    "noUnanswered": "No unanswered questions",
+    "allAnswered": "Great! All your questions have been answered",
+    "noResolved": "No resolved questions",
+    "markResolved": "Mark questions as resolved when you find the answer"
+  },
+  "saved": {
+    "title": "Saved Questions",
+    "subtitle": "Questions you've bookmarked",
+    "noSaved": "No saved questions",
+    "startSaving": "Save questions to easily find them later"
+  }
+}

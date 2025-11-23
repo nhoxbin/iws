@@ -1,0 +1,25 @@
+{
+  "welcome": "Welcome back, {{name}}!",
+  "subtitle": "Here's what's happening in your professional community",
+  "stats": {
+    "myQuestions": "My Questions",
+    "answers": "Answers",
+    "saved": "Saved",
+    "helpful": "Helpful"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "askQuestion": "Ask Question",
+    "browseQuestions": "Browse Questions",
+    "viewProfile": "View Profile"
+  },
+  "recentActivity": {
+    "title": "Recent Activity",
+    "noActivity": "No recent activity",
+    "getStarted": "Start asking or answering questions"
+  },
+  "trending": {
+    "title": "Trending Questions",
+    "noTrending": "No trending questions"
+  }
+}

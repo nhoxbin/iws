@@ -1,0 +1,56 @@
+{
+  "profile": {
+    "title": "Profile",
+    "editProfile": "Edit Profile",
+    "stats": {
+      "questions": "Questions",
+      "answers": "Answers",
+      "helpful": "Helpful"
+    },
+    "about": "About",
+    "role": "Role",
+    "memberSince": "Member since",
+    "activity": "Activity",
+    "recentQuestions": "Recent Questions",
+    "recentAnswers": "Recent Answers"
+  },
+  "editProfile": {
+    "title": "Edit Profile",
+    "subtitle": "Update your profile information",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.com",
+    "bioLabel": "Bio",
+    "bioPlaceholder": "Tell us about yourself...",
+    "roleLabel": "Role",
+    "selectRole": "Select your role",
+    "saveButton": "Save Changes",
+    "saving": "Saving...",
+    "cancelButton": "Cancel"
+  },
+  "onboarding": {
+    "title": "Welcome to IWS!",
+    "subtitle": "Let's set up your profile",
+    "selectRole": "Select Your Role",
+    "roleDescription": "Help us understand your experience level",
+    "fresher": {
+      "title": "Fresher",
+      "description": "Just starting your career journey"
+    },
+    "junior": {
+      "title": "Junior",
+      "description": "1-3 years of experience"
+    },
+    "middle": {
+      "title": "Middle",
+      "description": "3-5 years of experience"
+    },
+    "senior": {
+      "title": "Senior",
+      "description": "5+ years of experience"
+    },
+    "continueButton": "Continue",
+    "skipButton": "Skip for now"
+  }
+}

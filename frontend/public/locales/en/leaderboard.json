@@ -1,0 +1,20 @@
+{
+  "title": "Leaderboard",
+  "subtitle": "Top contributors in our community",
+  "tabs": {
+    "allTime": "All Time",
+    "thisMonth": "This Month",
+    "thisWeek": "This Week"
+  },
+  "columns": {
+    "rank": "Rank",
+    "user": "User",
+    "questions": "Questions",
+    "answers": "Answers",
+    "helpful": "Helpful",
+    "points": "Points"
+  },
+  "loading": "Loading leaderboard...",
+  "noData": "No data available",
+  "you": "You"
+}

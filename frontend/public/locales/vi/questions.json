@@ -1,0 +1,75 @@
+{
+  "askQuestion": {
+    "title": "Đặt câu hỏi mới",
+    "subtitle": "Nhận thông tin chi tiết từ các chuyên gia giàu kinh nghiệm trong lĩnh vực của bạn.",
+    "titleLabel": "Tiêu đề",
+    "titlePlaceholder": "vd: Làm thế nào để thiết kế một hệ thống thông báo có khả năng mở rộng?",
+    "detailsLabel": "Chi tiết câu hỏi",
+    "detailsPlaceholder": "Cung cấp thông tin chi tiết về câu hỏi của bạn. Bao gồm bối cảnh liên quan, những gì bạn đã thử và bạn cần trợ giúp cụ thể về điều gì.",
+    "categoryLabel": "Danh mục",
+    "categoryOptional": "(Tùy chọn)",
+    "selectCategory": "Chọn danh mục",
+    "tagsLabel": "Thẻ",
+    "tagsPlaceholder": "vd: React, System Design",
+    "tagsHint": "Nhấn dấu phẩy hoặc enter để thêm thẻ (tối đa 5 thẻ)",
+    "submitButton": "Gửi câu hỏi",
+    "submitting": "Đang gửi..."
+  },
+  "questionsList": {
+    "title": "Câu hỏi",
+    "subtitle": "Duyệt và trả lời câu hỏi từ các chuyên gia",
+    "askButton": "Đặt câu hỏi",
+    "filters": {
+      "all": "Tất cả câu hỏi",
+      "recent": "Gần đây",
+      "unanswered": "Chưa trả lời",
+      "resolved": "Đã giải quyết"
+    },
+    "sortBy": "Sắp xếp theo",
+    "noQuestions": "Chưa có câu hỏi nào",
+    "startAsking": "Hãy là người đầu tiên đặt câu hỏi!",
+    "views": "{{count}} lượt xem",
+    "answers": "{{count}} câu trả lời",
+    "answer": "{{count}} câu trả lời",
+    "loading": "Đang tải câu hỏi..."
+  },
+  "questionDetail": {
+    "views": "lượt xem",
+    "answers": "Câu trả lời",
+    "noAnswers": "Chưa có câu trả lời nào",
+    "beFirstAnswer": "Hãy là người đầu tiên trả lời câu hỏi này",
+    "yourAnswer": "Câu trả lời của bạn",
+    "answerPlaceholder": "Chia sẻ kiến thức và kinh nghiệm của bạn...",
+    "submitAnswer": "Gửi câu trả lời",
+    "submittingAnswer": "Đang gửi...",
+    "editQuestion": "Chỉnh sửa câu hỏi",
+    "deleteQuestion": "Xóa câu hỏi",
+    "markHelpful": "Đánh dấu hữu ích",
+    "marked": "Đã đánh dấu",
+    "save": "Lưu",
+    "saved": "Đã lưu",
+    "resolved": "Đã giải quyết"
+  },
+  "myQuestions": {
+    "title": "Câu hỏi của tôi",
+    "subtitle": "Quản lý và theo dõi câu hỏi của bạn",
+    "askButton": "Đặt câu hỏi",
+    "tabs": {
+      "all": "Tất cả",
+      "unanswered": "Chưa trả lời",
+      "resolved": "Đã giải quyết"
+    },
+    "noQuestions": "Chưa có câu hỏi nào",
+    "startAsking": "Đặt câu hỏi đầu tiên của bạn để bắt đầu",
+    "noUnanswered": "Không có câu hỏi chưa trả lời",
+    "allAnswered": "Tuyệt vời! Tất cả câu hỏi của bạn đều đã được trả lời",
+    "noResolved": "Không có câu hỏi đã giải quyết",
+    "markResolved": "Đánh dấu câu hỏi là đã giải quyết khi bạn tìm được câu trả lời"
+  },
+  "saved": {
+    "title": "Câu hỏi đã lưu",
+    "subtitle": "Các câu hỏi bạn đã đánh dấu",
+    "noSaved": "Không có câu hỏi đã lưu",
+    "startSaving": "Lưu câu hỏi để dễ dàng tìm lại sau"
+  }
+}
