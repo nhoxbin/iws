@@ -84,5 +84,5 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          chmod +x deploy.sh
-          ./deploy.sh "$FTP_HOST" "$FTP_USERNAME" "$FTP_PASSWORD" ./backend /iws.hpvt.net
+          chmod +x ./backend/deploy.sh
+          ./backend/deploy.sh "$FTP_HOST" "$FTP_USERNAME" "$FTP_PASSWORD" ./backend /iws.hpvt.net
