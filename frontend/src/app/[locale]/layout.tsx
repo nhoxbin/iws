@@ -31,7 +31,7 @@ export default async function LocaleLayout({
       <SWRProvider>
         <NavigationListener />
         <NavigationProgress />
-        <SPADebugger />
+        {/* <SPADebugger /> */}
         <LayoutContent>
           <Suspense fallback={<Loading />}>
             {children}
