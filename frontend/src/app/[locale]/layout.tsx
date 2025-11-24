@@ -7,7 +7,7 @@ import { SWRProvider } from '@/components/swr-provider';
 import { NavigationListener } from '@/components/navigation-listener';
 import { SPADebugger } from '@/components/spa-debugger';
 import { NavigationProgress } from '@/components/navigation-progress';
-import { AppHeader } from '@/components/app-header';
+import { LayoutContent } from '@/components/layout-content';
 import Loading from './loading';
 
 export default async function LocaleLayout({
@@ -32,15 +32,11 @@ export default async function LocaleLayout({
         <NavigationListener />
         <NavigationProgress />
         <SPADebugger />
-        <div className="min-h-screen bg-background">
-          {/* AppHeader stays cached here - outside Suspense, outside page component tree */}
-          <AppHeader />
+        <LayoutContent>
           <Suspense fallback={<Loading />}>
-            <main className="md:ml-20 mt-14 md:mt-16">
-              {children}
-            </main>
+            {children}
           </Suspense>
-        </div>
+        </LayoutContent>
       </SWRProvider>
     </NextIntlClientProvider>
   );

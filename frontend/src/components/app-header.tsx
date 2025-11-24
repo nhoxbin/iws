@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, memo } from 'react';
+import { useState, memo } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Search, Bell, Home, HelpCircle, Bookmark, BarChart3, ChevronDown, User, LogOut } from 'lucide-react';
 import { Link, useRouter, usePathname } from '@/lib/navigation';
