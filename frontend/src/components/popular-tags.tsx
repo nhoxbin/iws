@@ -1,4 +1,7 @@
+'use client';
+
 import { Link } from '@/lib/navigation';
+import { usePopularTags } from '@/hooks/use-cached-data';
 
 interface Tag {
   id: number;
@@ -6,16 +9,10 @@ interface Tag {
   posts_count: number;
 }
 
-interface PopularTagsProps {
-  tags: Tag[];
-  loading?: boolean;
-}
+export function PopularTags() {
+  const { tags, isLoading } = usePopularTags();
 
-export function PopularTags({ tags, loading = false }: PopularTagsProps) {
-  // Debug: log the tags data
-  console.log('PopularTags - tags:', tags, 'loading:', loading);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="bg-card border border-border rounded-xl p-6">
         <div className="h-6 bg-muted rounded w-32 mb-4 animate-pulse" />
@@ -36,7 +33,7 @@ export function PopularTags({ tags, loading = false }: PopularTagsProps) {
       <h3 className="text-foreground font-semibold mb-4">Popular Tags</h3>
       <div className="space-y-2">
         {tags && tags.length > 0 ? (
-          tags.map((tag) => (
+          tags.map((tag: Tag) => (
             <Link
               key={tag.id}
               href={`/questions?search=${encodeURIComponent(tag.name)}`}

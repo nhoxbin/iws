@@ -120,7 +120,17 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken(auth()->refresh());
+        try {
+            // Refresh the token - this invalidates the old token and issues a new one
+            $newToken = auth()->refresh();
+
+            return $this->respondWithToken($newToken);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Token refresh failed',
+                'error' => $e->getMessage()
+            ], 401);
+        }
     }
 
     /**
@@ -164,7 +174,7 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60
+            'expires_in' => (int) auth('api')->factory()->getTTL() * 60
         ]);
     }
 }

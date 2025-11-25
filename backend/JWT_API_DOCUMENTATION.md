@@ -276,9 +276,21 @@ The JWT token contains the following claims:
 Key configurations:
 
 ```php
-'ttl' => env('JWT_TTL', 60), // Token lifetime in minutes
+'ttl' => env('JWT_TTL', 60), // Token lifetime in minutes (default: 1 hour)
 'refresh_ttl' => env('JWT_REFRESH_TTL', 20160), // Refresh token lifetime (2 weeks)
 ```
+
+**Recommended Values (.env):**
+
+```env
+# Standard sessions (8 hours)
+JWT_TTL=480
+
+# Long refresh window (2 weeks)
+JWT_REFRESH_TTL=20160
+```
+
+The frontend automatically refreshes tokens before expiration. See `/TOKEN_REFRESH_GUIDE.md` for complete details.
 
 ### Auth Config (`config/auth.php`)
 

@@ -39,6 +39,8 @@ Route::get('tags', [TagController::class, 'index']);
 
 // User profile route (public)
 Route::get('users/{id}', [UserController::class, 'show']);
+Route::get('users/top-contributors/list', [UserController::class, 'topContributors']);
+Route::get('leaderboard', [UserController::class, 'leaderboard']);
 
 Route::middleware('auth:api')->group(function () {
     Route::post('posts/{post}/save', [PostController::class, 'save']);

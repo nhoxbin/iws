@@ -1,40 +1,97 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
-import { Trophy, Medal, Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trophy, Medal, Award } from 'lucide-react';
 import PrivateRoute from '@/components/private-route';
+import api from '@/lib/api';
 
-type Category = 'All' | 'Technology' | 'Science' | 'Arts' | 'Business';
-type TimeRange = 'All Time' | 'Monthly' | 'Weekly';
-
-interface LeaderUser {
+interface Category {
   id: number;
   name: string;
-  title: string;
+}
+
+interface LeaderUser {
+  rank: number;
+  id: number;
+  name: string;
+  role: string | null;
   reputation: number;
-  avatar?: string;
+  answers_count: number;
+  total_upvotes: number;
+}
+
+interface CurrentUserRank {
+  rank: number;
+  user: {
+    id: number;
+    name: string;
+    role: string | null;
+  };
+  reputation: number;
+  answers_count: number;
+  is_in_top: boolean;
+}
+
+interface LeaderboardResponse {
+  data: LeaderUser[];
+  current_user: CurrentUserRank | null;
 }
 
 function LeaderboardPage() {
   const { user } = useAuthStore();
-  const [selectedCategory, setSelectedCategory] = useState<Category>('All');
-  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('Weekly');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>('weekly');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [leaders, setLeaders] = useState<LeaderUser[]>([]);
+  const [currentUserRank, setCurrentUserRank] = useState<CurrentUserRank | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const categories: Category[] = ['All', 'Technology', 'Science', 'Arts', 'Business'];
-  const timeRanges: TimeRange[] = ['All Time', 'Monthly', 'Weekly'];
-
-  // Mock data
-  const leaders: LeaderUser[] = [
-    { id: 1, name: 'Olivia Martinez', title: 'Principal Designer @ Creative Co.', reputation: 15750 },
-    { id: 2, name: 'Liam Garcia', title: 'Lead Data Scientist @ DataWorks', reputation: 14200 },
-    { id: 3, name: 'Isabella Nguyen', title: 'Marketing Director @ Visionary Ads', reputation: 13980 },
-    { id: 4, name: 'Noah Patel', title: 'CTO @ InnovateTech', reputation: 12500 },
-    { id: 5, name: 'Sophia Kim', title: 'Senior Product Manager @ DevSolutions', reputation: 11830 },
+  const timeRanges = [
+    { value: 'all', label: 'All Time' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'weekly', label: 'Weekly' },
   ];
 
-  const currentUserRank = { rank: 42, reputation: 1280 };
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategories(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        limit: '10',
+        time_range: selectedTimeRange,
+      });
+
+      if (selectedCategory) {
+        params.append('category_id', selectedCategory);
+      }
+
+      const response = await api.get<LeaderboardResponse>(`/leaderboard?${params.toString()}`);
+      setLeaders(response.data.data);
+      setCurrentUserRank(response.data.current_user);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchLeaderboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, selectedTimeRange]);
 
   return (
     <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
@@ -50,146 +107,172 @@ function LeaderboardPage() {
 
           {/* Filters */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 mb-6">
-            <div className="flex flex-col lg:flex-row gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Time Range Filter */}
-              <div className="flex-1">
-                <div className="flex flex-wrap gap-2">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Time Range
+                </label>
+                <select
+                  value={selectedTimeRange}
+                  onChange={(e) => setSelectedTimeRange(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
                   {timeRanges.map((range) => (
-                    <button
-                      key={range}
-                      onClick={() => setSelectedTimeRange(range)}
-                      className={`px-4 py-2 rounded-lg font-medium transition text-sm sm:text-base ${
-                        selectedTimeRange === range
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {range}
-                    </button>
+                    <option key={range.value} value={range.value}>
+                      {range.label}
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
 
               {/* Category Filter */}
-              <div className="flex-1">
-                <div className="flex flex-wrap gap-2">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Category
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">All Categories</option>
                   {categories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`px-4 py-2 rounded-lg font-medium transition text-sm sm:text-base ${
-                        selectedCategory === category
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {category}
-                    </button>
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
             </div>
           </div>
 
           {/* Current User Rank */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 mb-6 shadow-lg">
-            <div className="flex items-center justify-between text-white">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-3xl font-bold">
-                  #{currentUserRank.rank}
+          {currentUserRank && (
+            <div className="bg-linear-to-r from-blue-600 to-purple-600 rounded-2xl p-6 mb-6 shadow-lg">
+              <div className="flex flex-col sm:flex-row items-center justify-between text-white gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-3xl font-bold">
+                    {currentUserRank.is_in_top ? `#${currentUserRank.rank}` : '10+'}
+                  </div>
+                  <div>
+                    <p className="text-sm opacity-90">You ({currentUserRank.user.name})</p>
+                    <p className="text-lg sm:text-xl font-bold">
+                      {currentUserRank.user.role
+                        ? `${currentUserRank.user.role.charAt(0).toUpperCase()}${currentUserRank.user.role.slice(1)}`
+                        : 'Community Member'}
+                    </p>
+                    {!currentUserRank.is_in_top && (
+                      <p className="text-xs opacity-75">Rank: #{currentUserRank.rank}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm opacity-90">You ({user?.name || 'Alex Chen'})</p>
-                  <p className="text-xl font-bold">{user?.role ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)} Software Engineer` : 'Senior Software Engineer'} @ Acme Inc.</p>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{currentUserRank.reputation.toLocaleString()}</p>
+                  <p className="text-sm opacity-90">REPUTATION</p>
+                  <p className="text-xs opacity-75">{currentUserRank.answers_count} Answers</p>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold">{currentUserRank.reputation.toLocaleString()}</p>
-                <p className="text-sm opacity-90">REPUTATION</p>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Leaderboard Table */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
-                      Rank
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
-                      User
-                    </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-slate-900 dark:text-white">
-                      Reputation Score
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaders.map((leader, index) => (
-                    <tr
-                      key={leader.id}
-                      className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          {index === 0 && <Trophy className="w-6 h-6 text-yellow-500" />}
-                          {index === 1 && <Medal className="w-6 h-6 text-slate-400" />}
-                          {index === 2 && <Award className="w-6 h-6 text-orange-600" />}
-                          <span className="text-lg font-bold text-slate-900 dark:text-white">
-                            {index + 1}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-900 dark:text-white font-semibold">
-                            {leader.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-slate-900 dark:text-white">
-                              {leader.name}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {leader.title}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <span className="text-2xl font-bold text-slate-900 dark:text-white">
-                          {leader.reputation.toLocaleString()}
-                        </span>
-                      </td>
+            {loading ? (
+              <div className="p-12 text-center">
+                <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">Loading leaderboard...</p>
+              </div>
+            ) : leaders.length === 0 ? (
+              <div className="p-12 text-center">
+                <Trophy className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                  No data yet
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Be the first to earn reputation by answering questions!
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800">
+                      <th className="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                        Rank
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                        User
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-right text-sm font-semibold text-slate-900 dark:text-white">
+                        Reputation
+                      </th>
+                      <th className="px-4 sm:px-6 py-4 text-right text-sm font-semibold text-slate-900 dark:text-white hidden sm:table-cell">
+                        Answers
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="flex items-center gap-2 px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
-              </button>
-              <span className="text-sm text-slate-600 dark:text-slate-400">
-                Page {currentPage} of 12
-              </span>
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                className="flex items-center gap-2 px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+                  </thead>
+                  <tbody>
+                    {leaders.map((leader) => {
+                      const isCurrentUser = user && leader.id === Number(user.id);
+                      return (
+                        <tr
+                          key={leader.id}
+                          className={`border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition ${
+                            isCurrentUser ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                          }`}
+                        >
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              {leader.rank === 1 && <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />}
+                              {leader.rank === 2 && <Medal className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400" />}
+                              {leader.rank === 3 && <Award className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />}
+                              <span className="text-lg font-bold text-slate-900 dark:text-white">
+                                {leader.rank}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                                {leader.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                  {leader.name}
+                                  {isCurrentUser && (
+                                    <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">You</span>
+                                  )}
+                                </p>
+                                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                                  {leader.role || 'Community Member'}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 text-right">
+                            <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+                              {leader.reputation.toLocaleString()}
+                            </span>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 sm:hidden">
+                              {leader.answers_count} answers
+                            </p>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 text-right hidden sm:table-cell">
+                            <span className="text-lg font-semibold text-slate-700 dark:text-slate-300">
+                              {leader.answers_count}
+                            </span>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {leader.total_upvotes} upvotes
+                            </p>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
       </div>
     </div>

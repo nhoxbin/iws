@@ -207,6 +207,21 @@ export default function ProtectedPage() {
 
 ## Token Refresh Flow
 
+### Automatic (Proactive) Refresh
+
+The application automatically refreshes tokens before they expire:
+
+1. Background check runs every minute (via `useTokenRefresh` hook)
+2. If token expires within 5 minutes → automatic refresh
+3. New token stored seamlessly
+4. User experiences no interruption
+
+See `/frontend/src/hooks/use-token-refresh.ts` for implementation.
+
+### Manual (Reactive) Refresh
+
+If a token expires during an API request:
+
 1. User makes API request
 2. Request fails with 401 error
 3. Interceptor catches error
@@ -217,6 +232,8 @@ export default function ProtectedPage() {
 6. If failed:
    - Clears authentication
    - Redirects to login
+
+For detailed information about token refresh and session management, see `/TOKEN_REFRESH_GUIDE.md`.
 
 ## Best Practices
 

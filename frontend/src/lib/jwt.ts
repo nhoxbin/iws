@@ -48,3 +48,22 @@ export const getTokenExpiry = (token: string): Date | null => {
 
   return new Date(decoded.exp * 1000);
 };
+
+/**
+ * Check if token will expire soon (within 5 minutes)
+ * This is useful for proactive token refresh
+ */
+export const isTokenExpiringSoon = (token: string, minutesThreshold: number = 5): boolean => {
+  try {
+    const decoded = decodeToken(token);
+    if (!decoded) return true;
+
+    const expiryTime = decoded.exp * 1000;
+    const now = Date.now();
+    const threshold = minutesThreshold * 60 * 1000; // Convert minutes to milliseconds
+
+    return expiryTime - now < threshold;
+  } catch {
+    return true;
+  }
+};

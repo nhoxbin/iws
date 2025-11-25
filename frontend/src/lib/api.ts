@@ -60,44 +60,65 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Check if the request had an Authorization header (meaning user was attempting authenticated access)
-      const hadAuthToken = !!originalRequest.headers.Authorization;
+      // Get token from storage
+      const authStorage = localStorage.getItem('auth-storage');
+      let oldToken = null;
+
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage);
+          oldToken = parsed.state?.token;
+        } catch (e) {
+          console.error('Failed to parse auth storage:', e);
+        }
+      }
 
       // Only try to refresh if user had a token
-      if (hadAuthToken) {
+      if (oldToken) {
         try {
-          // Try to refresh the token
+          // Try to refresh the token - must include current token in header
           const refreshResponse = await axios.post(
             `${API_BASE_URL}/auth/refresh`,
             {},
-            { withCredentials: true }
+            {
+              headers: {
+                Authorization: `Bearer ${oldToken}`,
+              },
+              withCredentials: true,
+            }
           );
 
           const { token } = refreshResponse.data;
 
           // Update token in auth-storage
-          const authStorage = localStorage.getItem('auth-storage');
           if (authStorage) {
             try {
               const parsed = JSON.parse(authStorage);
               parsed.state.token = token;
               localStorage.setItem('auth-storage', JSON.stringify(parsed));
+
+              // Trigger a custom event to notify auth store of token update
+              window.dispatchEvent(new CustomEvent('auth-token-refreshed', { detail: { token } }));
             } catch (e) {
               console.error('Failed to update auth storage:', e);
             }
           }
 
-          // Update the Authorization header
+          // Update the Authorization header for retry
           originalRequest.headers.Authorization = `Bearer ${token}`;
 
           // Retry the original request with new token
           return api(originalRequest);
         } catch (refreshError) {
-          // Refresh failed, clear auth and redirect to login only if user was authenticated
+          // Refresh failed, clear auth and redirect to login
+          console.error('Token refresh failed:', refreshError);
           localStorage.removeItem('auth-storage');
           navigationEvents.requireAuth();
           return Promise.reject(refreshError);
         }
+      } else {
+        // No token available, redirect to login
+        navigationEvents.requireAuth();
       }
     }
 
