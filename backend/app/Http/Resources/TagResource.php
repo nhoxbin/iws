@@ -17,6 +17,7 @@ class TagResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'posts_count' => $this->posts_count ?? 0,
         ];
     }
 }

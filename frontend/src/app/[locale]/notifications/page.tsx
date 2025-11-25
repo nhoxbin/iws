@@ -77,6 +77,8 @@ function NotificationsPage() {
         return <ThumbsUp className="w-5 h-5 text-purple-500" />;
       case 'question_updated':
         return <HelpCircle className="w-5 h-5 text-blue-500" />;
+      case 'comment_tagged':
+        return <MessageSquare className="w-5 h-5 text-orange-500" />;
       default:
         return <Bell className="w-5 h-5 text-slate-400" />;
     }
@@ -196,7 +198,7 @@ function NotificationsPage() {
                       {notification.post && (
                         <Link
                           href={`/questions/${notification.post_id}`}
-                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline block truncate"
+                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline block truncate mb-2"
                         >
                           {notification.post.title}
                         </Link>

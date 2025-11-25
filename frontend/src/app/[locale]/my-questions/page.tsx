@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { HelpCircle, Plus, Clock, MessageSquare, Eye, Bookmark, Edit, Trash2, Search } from 'lucide-react';
 import { Link } from '@/lib/navigation';
+import { toast } from 'sonner';
 import PrivateRoute from '@/components/private-route';
+import { useConfirmDialog } from '@/components/confirm-dialog';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/date-utils';
 
@@ -55,6 +57,7 @@ function MyQuestionsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'answered' | 'pending'>('all');
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const { confirm } = useConfirmDialog();
 
   useEffect(() => {
     fetchCategories();
@@ -131,18 +134,25 @@ function MyQuestionsPage() {
     }
   };
 
-  const handleDelete = async (questionId: number) => {
-    if (!confirm('Are you sure you want to delete this question?')) {
-      return;
-    }
-
-    try {
-      await api.delete(`/posts/${questionId}`);
-      setQuestions(questions.filter(q => q.id !== questionId));
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to delete question');
-    }
+  const handleDelete = (questionId: number) => {
+    confirm({
+      title: 'Delete Question',
+      message: 'Are you sure you want to delete this question? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/posts/${questionId}`);
+          setQuestions(questions.filter(q => q.id !== questionId));
+          toast.success('Question deleted successfully');
+        } catch (err) {
+          const error = err as { response?: { data?: { message?: string } } };
+          toast.error(error.response?.data?.message || 'Failed to delete question');
+          throw err;
+        }
+      },
+    });
   };
 
   return (

@@ -60,42 +60,48 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      try {
-        // Try to refresh the token
-        const refreshResponse = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
+      // Check if the request had an Authorization header (meaning user was attempting authenticated access)
+      const hadAuthToken = !!originalRequest.headers.Authorization;
 
-        const { token } = refreshResponse.data;
+      // Only try to refresh if user had a token
+      if (hadAuthToken) {
+        try {
+          // Try to refresh the token
+          const refreshResponse = await axios.post(
+            `${API_BASE_URL}/auth/refresh`,
+            {},
+            { withCredentials: true }
+          );
 
-        // Update token in auth-storage
-        const authStorage = localStorage.getItem('auth-storage');
-        if (authStorage) {
-          try {
-            const parsed = JSON.parse(authStorage);
-            parsed.state.token = token;
-            localStorage.setItem('auth-storage', JSON.stringify(parsed));
-          } catch (e) {
-            console.error('Failed to update auth storage:', e);
+          const { token } = refreshResponse.data;
+
+          // Update token in auth-storage
+          const authStorage = localStorage.getItem('auth-storage');
+          if (authStorage) {
+            try {
+              const parsed = JSON.parse(authStorage);
+              parsed.state.token = token;
+              localStorage.setItem('auth-storage', JSON.stringify(parsed));
+            } catch (e) {
+              console.error('Failed to update auth storage:', e);
+            }
           }
+
+          // Update the Authorization header
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+
+          // Retry the original request with new token
+          return api(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed, clear auth and redirect to login only if user was authenticated
+          localStorage.removeItem('auth-storage');
+          navigationEvents.requireAuth();
+          return Promise.reject(refreshError);
         }
-
-        // Update the Authorization header
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-
-        // Retry the original request with new token
-        return api(originalRequest);
-      } catch (refreshError) {
-        // Refresh failed, clear auth and redirect to login
-        localStorage.removeItem('auth-storage');
-        navigationEvents.requireAuth();
-        return Promise.reject(refreshError);
       }
     }
 
-    // For other errors, just reject
+    // For other errors, just reject without redirecting
     return Promise.reject(error);
   }
 );

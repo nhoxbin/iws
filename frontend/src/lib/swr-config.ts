@@ -3,7 +3,9 @@ import api from './api';
 
 // SWR fetcher function
 export const fetcher = async (url: string) => {
+  // console.log('SWR Fetcher called with URL:', url);
   const response = await api.get(url);
+  // console.log('SWR Fetcher response for', url, ':', response.data);
   return response.data;
 };
 
@@ -30,7 +32,7 @@ export const cacheStrategies = {
 
   // Semi-static data (e.g., popular tags, top contributors)
   semiStatic: {
-    revalidateOnMount: false,
+    revalidateOnMount: true,
     revalidateIfStale: true,
     dedupingInterval: 300000, // 5 minutes
   },

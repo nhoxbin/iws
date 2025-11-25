@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Answer;
 use App\Models\Comment;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,6 +25,7 @@ class CommentController extends Controller
         $validated = $request->validate([
             'content' => 'required|string|max:1000',
             'parent_id' => 'nullable|exists:comments,id',
+            'tagged_user_id' => 'nullable|exists:users,id',
         ]);
 
         // If parent_id is provided, verify it belongs to the same answer
@@ -33,14 +36,32 @@ class CommentController extends Controller
             }
         }
 
+        $taggedUserId = $validated['tagged_user_id'] ?? null;
+
         $comment = $answer->comments()->create([
             'user_id' => Auth::id(),
             'content' => $validated['content'],
             'parent_id' => $validated['parent_id'] ?? null,
+            'tagged_user_id' => $taggedUserId,
         ]);
 
+        // Create notification for tagged user
+        if ($taggedUserId && $taggedUserId != Auth::id()) {
+            $currentUser = Auth::user();
+            $post = $answer->post;
+
+            Notification::create([
+                'user_id' => $taggedUserId,
+                'type' => 'comment_tagged',
+                'message' => $currentUser->name . ' tagged you in a comment',
+                'post_id' => $post->id,
+                'related_user_id' => Auth::id(),
+                'read' => false,
+            ]);
+        }
+
         return response()->json([
-            'data' => $comment->load('user', 'replies')
+            'data' => $comment->load('user', 'taggedUser', 'replies')
         ], 201);
     }
 

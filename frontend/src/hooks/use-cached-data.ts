@@ -1,16 +1,19 @@
 import useSWR from 'swr';
-import { cacheStrategies } from '@/lib/swr-config';
+import { cacheStrategies, fetcher } from '@/lib/swr-config';
 
 // Hook for fetching popular tags (cached for 5 minutes)
 export function usePopularTags() {
   const { data, error, isLoading, mutate } = useSWR(
     '/tags',
-    null,
+    fetcher,
     cacheStrategies.semiStatic
   );
 
+  // Handle both data.data (ResourceCollection) and data directly
+  const tagsData = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+
   return {
-    tags: data?.data?.slice(0, 5) || [],
+    tags: tagsData.slice(0, 5),
     isLoading,
     isError: error,
     mutate,
@@ -18,16 +21,16 @@ export function usePopularTags() {
 }
 
 // Hook for fetching notifications with unread count (real-time updates)
-export function useNotifications(limit: number = 5) {
+export function useNotifications(limit: number = 5, enabled: boolean = true) {
   const { data: notificationsData, error: notificationsError, isLoading: notificationsLoading, mutate: mutateNotifications } = useSWR(
-    `/notifications?limit=${limit}`,
-    null,
+    enabled ? `/notifications?limit=${limit}` : null,
+    fetcher,
     cacheStrategies.dynamic
   );
 
   const { data: unreadData, error: unreadError, mutate: mutateUnread } = useSWR(
-    '/notifications/unread-count',
-    null,
+    enabled ? '/notifications/unread-count' : null,
+    fetcher,
     cacheStrategies.realtime
   );
 
@@ -47,7 +50,7 @@ export function useNotifications(limit: number = 5) {
 export function useCategories() {
   const { data, error, isLoading } = useSWR(
     '/categories',
-    null,
+    fetcher,
     cacheStrategies.static
   );
 
@@ -67,7 +70,7 @@ export function usePosts(params: Record<string, string | number | boolean> = {})
   const queryString = new URLSearchParams(queryParams).toString();
   const { data, error, isLoading, mutate } = useSWR(
     `/posts${queryString ? `?${queryString}` : ''}`,
-    null,
+    fetcher,
     cacheStrategies.dynamic
   );
 
@@ -84,7 +87,7 @@ export function usePosts(params: Record<string, string | number | boolean> = {})
 export function useUserProfile() {
   const { data, error, isLoading, mutate } = useSWR(
     '/auth/me',
-    null,
+    fetcher,
     cacheStrategies.semiStatic
   );
 

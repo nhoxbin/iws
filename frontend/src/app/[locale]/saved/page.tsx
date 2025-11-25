@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Bookmark, Home, Clock, Eye, MessageSquare, X } from 'lucide-react';
 import { Link } from '@/lib/navigation';
+import { toast } from 'sonner';
 import PrivateRoute from '@/components/private-route';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/date-utils';
@@ -76,9 +77,10 @@ function SavedPage() {
     try {
       await api.post(`/posts/${questionId}/save`);
       setSavedQuestions(savedQuestions.filter(q => q.id !== questionId));
+      toast.success('Question removed from saved');
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to unsave question');
+      toast.error(error.response?.data?.message || 'Failed to unsave question');
     }
   };
 

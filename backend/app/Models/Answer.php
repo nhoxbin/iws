@@ -56,6 +56,19 @@ class Answer extends Model
         return $this->hasMany(Comment::class)->whereNull('parent_id')->with('user', 'replies');
     }
 
+    public function scopeOrderedByHelpfulAndVotes($query)
+    {
+        return $query->orderByRaw('
+            CASE WHEN is_helpful = 1 THEN 0 ELSE 1 END,
+            created_at ASC,
+            CASE
+                WHEN (upvotes_count + downvotes_count) > 0
+                THEN upvotes_count / (upvotes_count + downvotes_count)
+                ELSE 0
+            END DESC
+        ');
+    }
+
     public function canBeEditedOrDeleted()
     {
         // Cannot edit/delete if it has been voted

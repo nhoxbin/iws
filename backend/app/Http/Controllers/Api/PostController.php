@@ -66,7 +66,11 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        return new PostResource($post->load(['user', 'tags', 'category', 'answers.user', 'answers.comments.user', 'answers.comments.replies']));
+        $post->load(['user', 'tags', 'category', 'answers' => function ($query) {
+            $query->orderedByHelpfulAndVotes();
+        }, 'answers.user', 'answers.comments.user', 'answers.comments.taggedUser', 'answers.comments.replies']);
+
+        return new PostResource($post);
     }
 
     /**

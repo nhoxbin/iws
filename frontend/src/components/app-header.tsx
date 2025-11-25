@@ -25,8 +25,16 @@ const defaultMenuItems: MenuItem[] = [
   { label: 'Leaderboard', icon: <BarChart3 className="w-5 h-5" />, href: '/leaderboard' },
 ];
 
+// Menu items that require authentication
+const authenticatedMenuItems = ['/my-questions', '/saved'];
+
 function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }: AppHeaderProps) {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
+
+  // Filter menu items based on authentication
+  const filteredMenuItems = menuItems.filter(item =>
+    isAuthenticated || !authenticatedMenuItems.includes(item.href)
+  );
   const router = useRouter();
   const pathname = usePathname();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -34,8 +42,8 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Use SWR cached hook for notifications (auto-refreshes every 30 seconds)
-  const { notifications, unreadCount, isLoading: notificationsLoading, mutate: mutateNotifications } = useNotifications(5);
+  // Use SWR cached hook for notifications only if authenticated
+  const { notifications, unreadCount, isLoading: notificationsLoading, mutate: mutateNotifications } = useNotifications(5, isAuthenticated);
 
   const handleNotificationClick = () => {
     setIsNotificationOpen(!isNotificationOpen);
@@ -131,17 +139,26 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
                 <Search className="w-5 h-5" />
               </button>
             )}
-            <button
-              onClick={handleNotificationClick}
-              className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={handleNotificationClick}
+                className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -151,7 +168,7 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
         <div className="flex items-center justify-between h-16 px-6">
           {/* Left: Navigation Menu */}
           <nav className="flex items-center gap-1">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               // next-intl's usePathname already returns path without locale
               // For dashboard, only match exact path. For others, match if path starts with href
               const isActive = item.href === '/dashboard'
@@ -188,18 +205,19 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
               </button>
             )}
 
-            <div className="relative">
-              <button
-                onClick={handleNotificationClick}
-                className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
+            {isAuthenticated && (
+              <div className="relative">
+                <button
+                  onClick={handleNotificationClick}
+                  className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
 
               {/* Notification Panel */}
               {isNotificationOpen && (
@@ -281,22 +299,24 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
                   </div>
                 </>
               )}
-            </div>
+              </div>
+            )}
 
-            {/* Avatar Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsAvatarDropdownOpen(!isAvatarDropdownOpen)}
-                className="flex items-center gap-2 group"
-              >
-                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-900 dark:text-white cursor-pointer hover:ring-2 hover:ring-blue-500 transition">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition" />
-              </button>
+            {/* Avatar Dropdown or Login/Register */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsAvatarDropdownOpen(!isAvatarDropdownOpen)}
+                  className="flex items-center gap-2 group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-900 dark:text-white cursor-pointer hover:ring-2 hover:ring-blue-500 transition">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition" />
+                </button>
 
-              {/* Dropdown Menu */}
-              {isAvatarDropdownOpen && (
+                {/* Dropdown Menu */}
+                {isAvatarDropdownOpen && (
                 <>
                   <div
                     className="fixed inset-0 z-40"
@@ -349,7 +369,23 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
                   </div>
                 </>
               )}
-            </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -357,7 +393,7 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
       {/* Mobile: Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-50">
         <div className="flex items-center justify-around h-16 px-2">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             // next-intl's usePathname already returns path without locale
             // For dashboard, only match exact path. For others, match if path starts with href
             const isActive = item.href === '/dashboard'

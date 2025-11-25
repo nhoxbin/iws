@@ -235,7 +235,7 @@ export default function QuestionsPage() {
                 >
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* Stats Sidebar */}
-                    <div className="flex sm:flex-col gap-4 sm:gap-3 text-center sm:min-w-[80px]">
+                    <div className="flex sm:flex-col gap-4 sm:gap-3 text-center sm:min-w-20">
                       <div className="flex-1 sm:flex-none">
                         <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                           {question.answers_count || 0}
@@ -272,13 +272,18 @@ export default function QuestionsPage() {
 
                       {/* Author & Time */}
                       <div className="flex items-center gap-2 text-sm mb-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                          {question.user.name.charAt(0).toUpperCase()}
-                        </div>
+                        <Link href={`/profile/${question.user.id}`}>
+                          <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs cursor-pointer hover:opacity-80 transition">
+                            {question.user.name.charAt(0).toUpperCase()}
+                          </div>
+                        </Link>
                         <div>
-                          <span className="text-slate-900 dark:text-white font-medium">
+                          <Link
+                            href={`/profile/${question.user.id}`}
+                            className="text-slate-900 dark:text-white font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                          >
                             {question.user.name}
-                          </span>
+                          </Link>
                           <span className="text-slate-500 dark:text-slate-400 mx-1">•</span>
                           <span className="text-slate-500 dark:text-slate-400">
                             Posted {formatDate(question.created_at)}

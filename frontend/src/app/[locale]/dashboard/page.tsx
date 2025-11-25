@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import PrivateRoute from '@/components/private-route';
 import { Link } from '@/lib/navigation';
 import { MessageSquare, Tag as TagIcon } from 'lucide-react';
 import { formatDate } from '@/lib/date-utils';
 import { usePopularTags, usePosts } from '@/hooks/use-cached-data';
-import { QuestionCardSkeleton, SidebarSkeleton } from '@/components/skeletons';
+import { QuestionCardSkeleton } from '@/components/skeletons';
+import { PopularTags } from '@/components/popular-tags';
+import { TopContributors } from '@/components/top-contributors';
 
 interface Tag {
   id: number;
@@ -22,6 +23,7 @@ interface Question {
   created_at: string;
   answers_count: number;
   user: {
+    id: number;
     name: string;
   };
   category?: {
@@ -34,11 +36,13 @@ function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'posts' | 'unanswered' | 'topic' | 'latest'>('posts');
 
   // Use SWR cached hooks for better performance
-  const { tags: popularTags } = usePopularTags();
+  const { tags: popularTags, isLoading: tagsLoading } = usePopularTags();
   const { posts: questions, isLoading: loading } = usePosts(
     activeTab === 'unanswered' ? { sort: 'unanswered' } :
     activeTab === 'latest' ? { sort: 'latest' } : {}
   );
+
+  console.log('Dashboard - popularTags:', popularTags, 'tagsLoading:', tagsLoading);
 
   return (
     <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
@@ -130,13 +134,18 @@ function DashboardPage() {
 
                 {/* Author & Time */}
                 <div className="flex items-center gap-2 text-sm mb-3">
-                  <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                    {question.user.name.charAt(0).toUpperCase()}
-                  </div>
+                  <Link href={`/profile/${question.user.id}`}>
+                    <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs cursor-pointer hover:opacity-80 transition">
+                      {question.user.name.charAt(0).toUpperCase()}
+                    </div>
+                  </Link>
                   <div>
-                    <span className="text-foreground font-medium">
+                    <Link
+                      href={`/profile/${question.user.id}`}
+                      className="text-foreground font-medium hover:text-blue-600 dark:hover:text-blue-400 transition"
+                    >
                       {question.user.name}
-                    </span>
+                    </Link>
                     <span className="text-muted-foreground mx-1">•</span>
                     <span className="text-muted-foreground">
                       Posted {formatDate(question.created_at)}
@@ -174,58 +183,8 @@ function DashboardPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Tags */}
-            {loading ? (
-              <SidebarSkeleton />
-            ) : (
-              <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="text-foreground font-semibold mb-4">Popular Tags</h3>
-                <div className="space-y-2">
-                  {popularTags.length > 0 ? (
-                    popularTags.map((tag: Tag) => (
-                    <Link
-                      key={tag.id}
-                      href={`/questions?search=${encodeURIComponent(tag.name)}`}
-                      className="flex justify-between items-center text-muted-foreground text-sm hover:text-primary transition"
-                    >
-                      <span>#{tag.name}</span>
-                      <span className="text-muted-foreground/60 text-xs">{tag.posts_count}</span>
-                    </Link>
-                  ))
-                ) : (
-                    <p className="text-muted-foreground text-sm">No tags yet</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Top Contributors */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h3 className="text-foreground font-semibold mb-4">Top Contributors</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-muted"></div>
-                  <div className="flex-1">
-                    <div className="text-foreground text-sm font-medium">Alex Smith</div>
-                    <div className="text-muted-foreground text-xs">128 Answers</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-muted"></div>
-                  <div className="flex-1">
-                    <div className="text-foreground text-sm font-medium">Maria Garcia</div>
-                    <div className="text-muted-foreground text-xs">97 Answers</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-muted"></div>
-                  <div className="flex-1">
-                    <div className="text-foreground text-sm font-medium">Ken Tanaka</div>
-                    <div className="text-muted-foreground text-xs">85 Answers</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PopularTags tags={popularTags} loading={tagsLoading} />
+            <TopContributors loading={loading} />
           </div>
         </div>
     </div>
@@ -233,9 +192,5 @@ function DashboardPage() {
 }
 
 export default function Dashboard() {
-  return (
-    <PrivateRoute>
-      <DashboardPage />
-    </PrivateRoute>
-  );
+  return <DashboardPage />;
 }

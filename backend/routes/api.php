@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\TagController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,6 +37,9 @@ Route::apiResource('posts', PostController::class);
 Route::apiResource('categories', CategoryController::class);
 Route::get('tags', [TagController::class, 'index']);
 
+// User profile route (public)
+Route::get('users/{id}', [UserController::class, 'show']);
+
 Route::middleware('auth:api')->group(function () {
     Route::post('posts/{post}/save', [PostController::class, 'save']);
     Route::post('posts/{post}/vote', [PostController::class, 'vote']);
@@ -58,4 +62,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    // User search route
+    Route::get('users/search', [UserController::class, 'search']);
 });
