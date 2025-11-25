@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, Plus, Search } from 'lucide-react';
 import { Link } from '@/lib/navigation';
 import { useRouter } from '@/lib/navigation';
@@ -24,6 +24,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  role?: string | null;
 }
 
 interface Question {
@@ -36,8 +37,9 @@ interface Question {
   user: User;
   tags: Tag[];
   category?: Category;
-  answers_count?: number;
+  answers_count: number;
   views_count?: number;
+  is_resolved?: boolean;
 }
 
 interface PaginationMeta {
@@ -66,20 +68,7 @@ function MyQuestionsPage() {
     fetchMyQuestions(currentPage);
   }, [currentPage]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [questions, searchQuery, statusFilter, categoryFilter]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/categories');
-      setCategories(response.data.data || []);
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-    }
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...questions];
 
     // Search filter
@@ -107,6 +96,19 @@ function MyQuestionsPage() {
     }
 
     setFilteredQuestions(filtered);
+  }, [questions, searchQuery, statusFilter, categoryFilter]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategories(response.data.data || []);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
   };
 
   const fetchMyQuestions = async (page: number) => {
