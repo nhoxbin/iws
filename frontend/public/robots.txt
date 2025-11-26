@@ -1,0 +1,17 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow private/auth-only pages
+Disallow: /api/
+Disallow: /*/login
+Disallow: /*/register
+Disallow: /*/dashboard
+Disallow: /*/edit-profile
+Disallow: /*/my-questions
+Disallow: /*/notifications
+Disallow: /*/saved
+Disallow: /*/onboarding
+
+# Sitemap location
+Sitemap: https://iws-inky.vercel.app/sitemap.xml

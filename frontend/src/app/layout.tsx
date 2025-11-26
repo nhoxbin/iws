@@ -19,8 +19,69 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Interview Wisdom Share",
-  description: "App for people who want to ask about interview questions. Built with Next.js, Laravel. AI Supported.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://iws-inky.vercel.app'),
+  title: {
+    default: 'Interview Wisdom Share - Ask & Share Interview Questions',
+    template: '%s | Interview Wisdom Share',
+  },
+  description: 'Community platform for sharing interview questions and answers. Get help preparing for your next job interview with AI-powered insights and expert advice from experienced professionals.',
+  keywords: [
+    'interview questions',
+    'job interview',
+    'career advice',
+    'interview preparation',
+    'coding interview',
+    'technical interview',
+    'interview tips',
+    'job search',
+    'career development',
+    'interview practice',
+  ],
+  authors: [{ name: 'Interview Wisdom Share' }],
+  creator: 'Interview Wisdom Share',
+  publisher: 'Interview Wisdom Share',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://iws-inky.vercel.app',
+    siteName: 'Interview Wisdom Share',
+    title: 'Interview Wisdom Share - Ask & Share Interview Questions',
+    description: 'Community platform for sharing interview questions and answers. Get help preparing for your next job interview with AI-powered insights.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Interview Wisdom Share',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Interview Wisdom Share - Ask & Share Interview Questions',
+    description: 'Community platform for sharing interview questions and answers with AI-powered insights.',
+    images: ['/twitter-image.png'],
+    creator: '@interviewwisdom',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: 'https://iws-inky.vercel.app',
+  },
 };
 
 export default function RootLayout({
