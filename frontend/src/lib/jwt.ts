@@ -35,7 +35,7 @@ export const getUserFromToken = (token: string) => {
   if (!decoded) return null;
 
   return {
-    id: decoded.sub,
+    id: parseInt(decoded.sub, 10),
     email: decoded.email,
     name: decoded.name,
     role: decoded.role,

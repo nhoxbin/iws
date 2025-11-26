@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { getUserFromToken, isTokenExpired, isTokenExpiringSoon } from './jwt';
 
 interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role?: string;
