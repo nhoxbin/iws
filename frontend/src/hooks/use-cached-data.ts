@@ -91,7 +91,7 @@ export function useUserProfile() {
     user: null,
     isLoading: false,
     isError: false,
-    mutate: () => {},
+    mutate: () => { },
   };
 }
 

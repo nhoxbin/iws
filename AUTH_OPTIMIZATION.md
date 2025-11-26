@@ -1,6 +1,7 @@
 # Authentication Optimization - User Profile Caching
 
 ## Summary
+
 Optimized authentication flow to reduce unnecessary `/auth/me` API calls by implementing global user profile caching in the auth store.
 
 ## Changes Made
@@ -8,20 +9,23 @@ Optimized authentication flow to reduce unnecessary `/auth/me` API calls by impl
 ### 1. Enhanced Auth Store (`frontend/src/lib/auth-store.ts`)
 
 #### New Features:
+
 - **`userFetched` state**: Tracks whether user profile has been fetched from API
 - **`fetchUser()` method**: Fetches full user profile from `/auth/me` API once and caches it
 - **Auto-fetch on login**: Automatically fetches user profile after successful authentication
 
 #### How It Works:
+
 ```typescript
 // When user logs in, token is set and user profile is fetched automatically
-setAuth(token) // → Fetches user profile once
+setAuth(token); // → Fetches user profile once
 
 // Components can now access user from store without API calls
 const { user, isAuthenticated } = useAuthStore();
 ```
 
 #### Benefits:
+
 - ✅ User profile fetched only once per session
 - ✅ No API calls when user is not logged in
 - ✅ Profile data cached in localStorage
@@ -30,11 +34,13 @@ const { user, isAuthenticated } = useAuthStore();
 ### 2. Updated API Interceptor (`frontend/src/lib/api.ts`)
 
 #### Changes:
+
 - **Removed `/auth/me` from protected endpoints list** that trigger login redirects
 - `/auth/me` calls now fail silently when token is invalid (no redirect to login)
 - Only truly protected endpoints (`/notifications`, `/saved-posts`) trigger login redirects
 
 #### Behavior:
+
 ```typescript
 // Before: /auth/me call with expired token → redirect to login ❌
 // After: /auth/me call with expired token → fail silently ✅
@@ -46,12 +52,14 @@ const { user, isAuthenticated } = useAuthStore();
 ### 3. Updated Components
 
 #### `use-question-detail.ts`
+
 - **Before**: Called `/auth/me` on every component mount
 - **After**: Gets user directly from auth store
+
 ```typescript
 // Before
 useEffect(() => {
-  const response = await api.get('/auth/me');
+  const response = await api.get("/auth/me");
   setCurrentUser(response.data);
 }, []);
 
@@ -60,11 +68,13 @@ const { user: currentUser } = useAuthStore();
 ```
 
 #### `my-questions/page.tsx`
+
 - **Before**: Called `/auth/me` to get user ID before fetching questions
 - **After**: Gets user from auth store
+
 ```typescript
 // Before
-const userResponse = await api.get('/auth/me');
+const userResponse = await api.get("/auth/me");
 const userId = userResponse.data.id;
 
 // After
@@ -73,11 +83,13 @@ const { user } = useAuthStore();
 ```
 
 #### `profile/page.tsx`
+
 - **Before**: Called `/auth/me` to get user data
 - **After**: Gets user from auth store
+
 ```typescript
 // Before
-const userResponse = await api.get('/auth/me');
+const userResponse = await api.get("/auth/me");
 const currentUserId = userResponse.data.id;
 
 // After
@@ -88,6 +100,7 @@ const currentUserId = Number(user.id);
 ### 4. Deprecated Hook (`use-cached-data.ts`)
 
 #### `useUserProfile()` Hook:
+
 - **Status**: Deprecated
 - **Reason**: Direct store access is more efficient
 - **Migration**: Use `useAuthStore()` directly
@@ -103,33 +116,35 @@ const { user, isAuthenticated } = useAuthStore();
 ## Usage Guide
 
 ### For Protected Pages:
+
 ```typescript
-'use client';
-import { useAuthStore } from '@/lib/auth-store';
+"use client";
+import { useAuthStore } from "@/lib/auth-store";
 
 function MyProtectedComponent() {
   const { user, isAuthenticated, userFetched } = useAuthStore();
-  
+
   // Check if loading
   if (isAuthenticated && !userFetched) {
     return <div>Loading user...</div>;
   }
-  
+
   // Check if authenticated
   if (!isAuthenticated) {
     return <div>Please log in</div>;
   }
-  
+
   // Use user data
   return <div>Welcome, {user?.name}</div>;
 }
 ```
 
 ### For Public Pages That May Show User Info:
+
 ```typescript
 function MyPublicComponent() {
   const { user, isAuthenticated } = useAuthStore();
-  
+
   return (
     <div>
       {isAuthenticated ? (
@@ -143,14 +158,15 @@ function MyPublicComponent() {
 ```
 
 ### For Components That Need Fresh User Data:
+
 ```typescript
 function MyComponent() {
   const { user, fetchUser } = useAuthStore();
-  
+
   const handleRefresh = async () => {
     await fetchUser(); // Manually refetch if needed
   };
-  
+
   return <button onClick={handleRefresh}>Refresh Profile</button>;
 }
 ```
@@ -158,6 +174,7 @@ function MyComponent() {
 ## Performance Impact
 
 ### Before:
+
 - Questions page visit → 1 API call to `/auth/me` ❌
 - Question detail page → 1 API call to `/auth/me` ❌
 - My questions page → 1 API call to `/auth/me` ❌
@@ -165,6 +182,7 @@ function MyComponent() {
 - **Total: 4 unnecessary API calls** 🔴
 
 ### After:
+
 - Login → 1 API call to `/auth/me` (cached) ✅
 - Questions page visit → 0 API calls ✅
 - Question detail page → 0 API calls (uses cached data) ✅
@@ -195,17 +213,19 @@ function MyComponent() {
 ## Migration Notes
 
 ### If you have other components calling `/auth/me`:
+
 1. Import `useAuthStore`
 2. Replace API call with store access
 3. Remove loading state if not needed
 
 ### Example Migration:
+
 ```typescript
 // Before
 const [user, setUser] = useState(null);
 useEffect(() => {
   const fetchUser = async () => {
-    const response = await api.get('/auth/me');
+    const response = await api.get("/auth/me");
     setUser(response.data);
   };
   fetchUser();
