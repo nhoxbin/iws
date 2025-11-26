@@ -34,9 +34,13 @@ function ProfilePage() {
     try {
       setLoading(true);
 
-      // Get current user
-      const userResponse = await api.get('/auth/me');
-      const currentUserId = userResponse.data.id;
+      // Check if user is available from store
+      if (!user || !user.id) {
+        setLoading(false);
+        return;
+      }
+
+      const currentUserId = Number(user.id);
 
       // Fetch all posts to get user's questions and answers
       const postsResponse = await api.get('/posts');

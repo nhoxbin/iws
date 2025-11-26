@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
 
+  // Enable .html extension support
+  trailingSlash: false,
+
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -25,6 +28,20 @@ const nextConfig: NextConfig = {
   // Enable experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+
+  // Rewrite .html URLs to their original routes
+  async rewrites() {
+    return [
+      {
+        source: '/:locale/:path*.html',
+        destination: '/:locale/:path*',
+      },
+      {
+        source: '/:path*.html',
+        destination: '/:path*',
+      },
+    ];
   },
 };
 

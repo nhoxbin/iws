@@ -83,16 +83,41 @@ export function usePosts(params: Record<string, string | number | boolean> = {})
   };
 }
 
-// Hook for fetching user profile (cached for 5 minutes)
+// Hook for fetching user profile - uses auth store instead of API call
 export function useUserProfile() {
+  // Note: Import useAuthStore dynamically in the component that uses this hook
+  // to avoid potential circular dependencies
+  return {
+    user: null,
+    isLoading: false,
+    isError: false,
+    mutate: () => {},
+  };
+}
+
+// DEPRECATED: Use useAuthStore directly instead of this hook
+// Example: const { user, isAuthenticated } = useAuthStore();
+
+// Hook for fetching leaderboard (cached for 2 minutes)
+export function useLeaderboard(timeRange: string, categoryId?: string, limit: number = 10) {
+  const params = new URLSearchParams({
+    limit: limit.toString(),
+    time_range: timeRange,
+  });
+
+  if (categoryId) {
+    params.append('category_id', categoryId);
+  }
+
   const { data, error, isLoading, mutate } = useSWR(
-    '/auth/me',
+    `/leaderboard?${params.toString()}`,
     fetcher,
-    cacheStrategies.semiStatic
+    cacheStrategies.dynamic
   );
 
   return {
-    user: data,
+    leaders: data?.data || [],
+    currentUserRank: data?.current_user || null,
     isLoading,
     isError: error,
     mutate,

@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Trophy, Medal, Award } from 'lucide-react';
-import PrivateRoute from '@/components/private-route';
-import api from '@/lib/api';
+import { useCategories, useLeaderboard } from '@/hooks/use-cached-data';
 
 interface Category {
   id: number;
   name: string;
 }
 
-interface LeaderUser {
+interface Leader {
   rank: number;
   id: number;
   name: string;
@@ -21,31 +20,10 @@ interface LeaderUser {
   total_upvotes: number;
 }
 
-interface CurrentUserRank {
-  rank: number;
-  user: {
-    id: number;
-    name: string;
-    role: string | null;
-  };
-  reputation: number;
-  answers_count: number;
-  is_in_top: boolean;
-}
-
-interface LeaderboardResponse {
-  data: LeaderUser[];
-  current_user: CurrentUserRank | null;
-}
-
 function LeaderboardPage() {
   const { user } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>('weekly');
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [leaders, setLeaders] = useState<LeaderUser[]>([]);
-  const [currentUserRank, setCurrentUserRank] = useState<CurrentUserRank | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const timeRanges = [
     { value: 'all', label: 'All Time' },
@@ -53,45 +31,13 @@ function LeaderboardPage() {
     { value: 'weekly', label: 'Weekly' },
   ];
 
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/categories');
-      setCategories(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        limit: '10',
-        time_range: selectedTimeRange,
-      });
-
-      if (selectedCategory) {
-        params.append('category_id', selectedCategory);
-      }
-
-      const response = await api.get<LeaderboardResponse>(`/leaderboard?${params.toString()}`);
-      setLeaders(response.data.data);
-      setCurrentUserRank(response.data.current_user);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    fetchLeaderboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, selectedTimeRange]);
+  // Use SWR cached hooks
+  const { categories } = useCategories();
+  const { leaders, currentUserRank, isLoading: loading } = useLeaderboard(
+    selectedTimeRange,
+    selectedCategory,
+    10
+  );
 
   return (
     <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">
@@ -137,7 +83,7 @@ function LeaderboardPage() {
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="">All Categories</option>
-                  {categories.map((category) => (
+                  {categories.map((category: Category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
@@ -213,7 +159,7 @@ function LeaderboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {leaders.map((leader) => {
+                    {leaders.map((leader: Leader) => {
                       const isCurrentUser = user && leader.id === Number(user.id);
                       return (
                         <tr
@@ -280,9 +226,5 @@ function LeaderboardPage() {
 }
 
 export default function Leaderboard() {
-  return (
-    <PrivateRoute>
-      <LeaderboardPage />
-    </PrivateRoute>
-  );
+  return <LeaderboardPage />;
 }

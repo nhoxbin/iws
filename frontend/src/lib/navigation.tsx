@@ -13,13 +13,16 @@ export const { usePathname } = navigation;
 const OriginalLink = navigation.Link;
 export function Link({ href, ...props }: ComponentProps<typeof OriginalLink>) {
   const processedHref = typeof href === 'string' ? addHtmlExtension(href) : href;
-  return <OriginalLink href={ processedHref } {...props } />;
+  return <OriginalLink href={processedHref} {...props} />;
 }
 
 // Wrap redirect to automatically add .html extension
 const originalRedirect = navigation.redirect;
-export function redirect(href: string, type?: 'push' | 'replace'): never {
-  return originalRedirect(addHtmlExtension(href), type);
+export function redirect(params: { href: string; locale: string }, type?: 'push' | 'replace'): never {
+  return originalRedirect({
+    ...params,
+    href: addHtmlExtension(params.href)
+  }, type);
 }
 
 // Wrap useRouter to automatically add .html extension

@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 
 export default function Leaderboard() {
   return (
-    <PrivateRoute>
+    // <PrivateRoute>
+    // </PrivateRoute>
       <LeaderboardClient />
-    </PrivateRoute>
   );
 }

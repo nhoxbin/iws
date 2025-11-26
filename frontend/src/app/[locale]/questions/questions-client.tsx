@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, Plus, Tag as TagIcon } from 'lucide-react';
 import { Link } from '@/lib/navigation';
 import { useSearchParams } from 'next/navigation';
@@ -60,28 +60,6 @@ export default function QuestionsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
 
-  useEffect(() => {
-    fetchCategories();
-    fetchTags();
-  }, []);
-
-  // Update searchText when URL search param changes
-  useEffect(() => {
-    setSearchText(urlSearch);
-  }, [urlSearch]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchQuestions(1);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchText, selectedCategory, selectedTag]);
-
-  useEffect(() => {
-    fetchQuestions(currentPage);
-  }, [currentPage]);
-
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
@@ -100,7 +78,7 @@ export default function QuestionsPage() {
     }
   };
 
-  const fetchQuestions = async (page: number) => {
+  const fetchQuestions = useCallback(async (page: number) => {
     try {
       setLoading(true);
       setError(null);
@@ -122,7 +100,33 @@ export default function QuestionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchText, selectedCategory, selectedTag]);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchTags();
+  }, []);
+
+  // Update searchText when URL search param changes
+  useEffect(() => {
+    setSearchText(urlSearch);
+  }, [urlSearch]);
+
+  // Fetch questions when filters change (with debounce) or page changes
+  useEffect(() => {
+    // When filters change, reset to page 1
+    if (searchText || selectedCategory || selectedTag) {
+      const timer = setTimeout(() => {
+        setCurrentPage(1);
+        fetchQuestions(1);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    } else {
+      // No filters, just fetch current page
+      fetchQuestions(currentPage);
+    }
+  }, [searchText, selectedCategory, selectedTag, currentPage, fetchQuestions]);
 
   return (
     <div className="pt-4 pb-20 md:pb-8 px-4 sm:px-6 lg:px-8">

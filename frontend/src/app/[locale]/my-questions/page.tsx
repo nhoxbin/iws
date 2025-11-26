@@ -9,6 +9,7 @@ import PrivateRoute from '@/components/private-route';
 import { useConfirmDialog } from '@/components/confirm-dialog';
 import api from '@/lib/api';
 import { QuestionCard } from '@/components/question-card';
+import { useAuthStore } from '@/lib/auth-store';
 
 interface Tag {
   id: number;
@@ -51,6 +52,7 @@ interface PaginationMeta {
 
 function MyQuestionsPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,8 +67,11 @@ function MyQuestionsPage() {
 
   useEffect(() => {
     fetchCategories();
-    fetchMyQuestions(currentPage);
-  }, [currentPage]);
+    if (user) {
+      fetchMyQuestions(currentPage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, user]);
 
   const applyFilters = useCallback(() => {
     let filtered = [...questions];
@@ -116,16 +121,19 @@ function MyQuestionsPage() {
       setLoading(true);
       setError(null);
 
-      // Get current user's ID
-      const userResponse = await api.get('/auth/me');
-      const userId = userResponse.data.id;
+      // Check if user is available from store
+      if (!user) {
+        setError('User not found. Please log in again.');
+        setLoading(false);
+        return;
+      }
 
       // Fetch all posts and filter by user
       const response = await api.get(`/posts?page=${page}`);
       const allQuestions = response.data.data;
 
       // Filter questions by current user
-      const userQuestions = allQuestions.filter((q: Question) => q.user.id === userId);
+      const userQuestions = allQuestions.filter((q: Question) => q.user.id === Number(user.id));
 
       setQuestions(userQuestions);
       setPagination(response.data.meta);

@@ -2,9 +2,7 @@ import axios from 'axios';
 import { isTokenExpired } from './jwt';
 import { navigationEvents } from './navigation-events';
 
-const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'http://127.0.0.1:8000/api'
-  : 'https://iws.hpvt.net/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,7 +18,7 @@ api.interceptors.request.use(
     // Get token from zustand persisted storage
     const authStorage = localStorage.getItem('auth-storage');
     let token = null;
-
+    console.log(process.env.NEXT_PUBLIC_API_URL);
     if (authStorage) {
       try {
         const parsed = JSON.parse(authStorage);
@@ -35,8 +33,22 @@ api.interceptors.request.use(
       if (isTokenExpired(token)) {
         // Token is expired, clear auth storage
         localStorage.removeItem('auth-storage');
-        navigationEvents.requireAuth();
-        return Promise.reject(new Error('Token expired'));
+
+        // Define truly protected endpoints that always require valid auth
+        const protectedEndpoints = ['/notifications', '/saved-posts'];
+        const isProtectedEndpoint = protectedEndpoints.some(endpoint =>
+          config.url?.includes(endpoint)
+        );
+
+        // Only reject for endpoints that absolutely require authentication
+        if (isProtectedEndpoint) {
+          navigationEvents.requireAuth();
+          return Promise.reject(new Error('Token expired'));
+        }
+
+        // For public endpoints (including GET to /posts, /categories, /tags),
+        // just continue without the expired token - don't redirect
+        return config;
       }
 
       // Add Bearer token to Authorization header
@@ -58,6 +70,7 @@ api.interceptors.response.use(
 
     // If error is 401 (Unauthorized) and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('[API] 401 error for:', originalRequest.url, 'Method:', originalRequest.method);
       originalRequest._retry = true;
 
       // Get token from storage
@@ -72,6 +85,8 @@ api.interceptors.response.use(
           console.error('Failed to parse auth storage:', e);
         }
       }
+
+      console.log('[API] Has old token:', !!oldToken);
 
       // Only try to refresh if user had a token
       if (oldToken) {
@@ -110,15 +125,47 @@ api.interceptors.response.use(
           // Retry the original request with new token
           return api(originalRequest);
         } catch (refreshError) {
-          // Refresh failed, clear auth and redirect to login
+          // Refresh failed, clear auth and redirect to login ONLY if accessing protected routes
           console.error('Token refresh failed:', refreshError);
           localStorage.removeItem('auth-storage');
-          navigationEvents.requireAuth();
+
+          // Only redirect to login if the endpoint is actually protected
+          // Public endpoints like /posts, /categories, /tags should not trigger redirect
+          const protectedEndpoints = ['/notifications', '/saved-posts', '/auth/user/role'];
+          const isProtectedEndpoint = protectedEndpoints.some(endpoint =>
+            originalRequest.url?.includes(endpoint)
+          );
+
+          if (isProtectedEndpoint) {
+            navigationEvents.requireAuth();
+          }
           return Promise.reject(refreshError);
         }
-      } else {
-        // No token available, redirect to login
+      }
+      // If no token and it's a protected endpoint, redirect to login
+      // Otherwise, just let the request fail naturally (for public endpoints)
+      // Only redirect for truly protected endpoints or mutation operations
+      const method = originalRequest.method?.toLowerCase();
+      const url = originalRequest.url || '';
+
+      console.log('[API] No token, checking if should redirect for:', url, 'Method:', method);
+
+      // Define which endpoints should trigger login redirect
+      // Note: /auth/me should NOT redirect - it's used to check auth status and should fail silently
+      const redirectEndpoints = ['/notifications', '/saved-posts'];
+      const shouldRedirect = redirectEndpoints.some(endpoint => url.includes(endpoint));
+
+      // Check if it's a mutation to a protected resource (POST/PUT/DELETE to /posts/:id, /answers/:id, etc.)
+      const isMutationToResource = !['get', 'head', 'options'].includes(method || 'get') &&
+        (url.match(/\/posts\/\d+/) || url.match(/\/answers\/\d+/));
+
+      console.log('[API] shouldRedirect:', shouldRedirect, 'isMutationToResource:', isMutationToResource);
+
+      if (shouldRedirect || isMutationToResource) {
+        console.log('[API] Redirecting to login');
         navigationEvents.requireAuth();
+      } else {
+        console.log('[API] Endpoint can fail without redirect (e.g., /auth/me check)');
       }
     }
 

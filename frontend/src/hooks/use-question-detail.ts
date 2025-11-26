@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from '@/lib/navigation';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { useConfirmDialog } from '@/components/confirm-dialog';
+import { useAuthStore } from '@/lib/auth-store';
 
 interface User {
   id: number;
@@ -72,42 +73,58 @@ export function useQuestionDetail(questionId: string) {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchCurrentUser = useCallback(async () => {
-    try {
-      const response = await api.get('/auth/me');
-      setCurrentUser(response.data);
-    } catch {
-      // User is not authenticated, which is fine for public viewing
-      setCurrentUser(null);
-    }
-  }, []);
+  // Get current user from auth store instead of fetching
+  const { user: currentUser } = useAuthStore();
 
-  const fetchQuestion = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await api.get(`/posts/${questionId}`);
-      const questionData = response.data.data;
-      setQuestion(questionData);
-      setAnswers(questionData.answers || []);
-      setIsSaved(questionData.is_saved || false);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load question');
-      console.error('Error fetching question:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [questionId]);
-
+  // Fetch question when questionId changes
   useEffect(() => {
-    fetchCurrentUser();
+    const fetchQuestion = async () => {
+      // Abort previous request if it exists
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create new AbortController for this request
+      abortControllerRef.current = new AbortController();
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await api.get(`/posts/${questionId}`, {
+          signal: abortControllerRef.current.signal,
+        });
+
+        const questionData = response.data.data;
+        setQuestion(questionData);
+        setAnswers(questionData.answers || []);
+        setIsSaved(questionData.is_saved || false);
+      } catch (err) {
+        // Ignore abort errors
+        const errorObj = err as { name?: string; response?: { data?: { message?: string } } };
+        if (errorObj.name === 'CanceledError' || errorObj.name === 'AbortError') {
+          return;
+        }
+
+        setError(errorObj.response?.data?.message || 'Failed to load question');
+        console.error('Error fetching question:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchQuestion();
-  }, [questionId, fetchCurrentUser, fetchQuestion]);
+
+    return () => {
+      // Abort the request if component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [questionId]);
 
   const handleSaveQuestion = useCallback(async () => {
     if (!currentUser) {

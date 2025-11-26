@@ -25,7 +25,7 @@ export const swrConfig: SWRConfiguration = {
 export const cacheStrategies = {
   // Static data that rarely changes (e.g., tags, categories)
   static: {
-    revalidateOnMount: false,
+    revalidateOnMount: true,
     revalidateIfStale: false,
     dedupingInterval: 3600000, // 1 hour
   },

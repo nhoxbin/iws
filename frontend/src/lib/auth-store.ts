@@ -7,18 +7,21 @@ interface User {
   name: string;
   email: string;
   role?: string;
+  job_description?: string;
 }
 
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  userFetched: boolean; // Track if we've tried to fetch user from API
   setAuth: (token: string) => void;
   updateUser: (user: Partial<User>) => void;
   logout: () => void;
   checkAuth: () => void;
   refreshToken: () => Promise<void>;
   shouldRefreshToken: () => boolean;
+  fetchUser: () => Promise<void>; // Fetch full user profile from API
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
+      userFetched: false,
 
       setAuth: (token: string) => {
         // Decode JWT token to get user info
@@ -44,7 +48,52 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
 
-        set({ user, token, isAuthenticated: true });
+        set({ user, token, isAuthenticated: true, userFetched: false });
+        // Fetch full user profile after setting token
+        get().fetchUser();
+      },
+
+      fetchUser: async () => {
+        const { token, isAuthenticated } = get();
+
+        // Don't fetch if not authenticated or no token
+        if (!isAuthenticated || !token) {
+          set({ userFetched: true });
+          return;
+        }
+
+        // Don't fetch if token is expired
+        if (isTokenExpired(token)) {
+          get().logout();
+          return;
+        }
+
+        try {
+          const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            set({ user: userData, userFetched: true });
+          } else {
+            // If 401, token might be invalid, logout
+            if (response.status === 401) {
+              get().logout();
+            } else {
+              set({ userFetched: true });
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch user:', error);
+          set({ userFetched: true });
+        }
       },
 
       updateUser: (updatedUser: Partial<User>) => {
@@ -55,7 +104,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false, userFetched: false });
       },
 
       checkAuth: () => {
@@ -77,6 +126,10 @@ export const useAuthStore = create<AuthState>()(
         const user = getUserFromToken(token);
         if (user) {
           set({ user, isAuthenticated: true });
+          // Fetch full user profile if not already fetched
+          if (!get().userFetched) {
+            get().fetchUser();
+          }
         } else {
           get().logout();
         }
@@ -95,9 +148,7 @@ export const useAuthStore = create<AuthState>()(
         if (!token) return;
 
         try {
-          const API_BASE_URL = process.env.NODE_ENV === 'development'
-            ? 'http://127.0.0.1:8000/api'
-            : 'https://iws.hpvt.net/api';
+          const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
           const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method: 'POST',

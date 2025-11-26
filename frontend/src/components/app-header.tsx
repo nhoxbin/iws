@@ -4,6 +4,7 @@ import { useState, memo } from 'react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Search, Bell, Home, HelpCircle, Bookmark, BarChart3, ChevronDown, User, LogOut } from 'lucide-react';
 import { Link, useRouter, usePathname } from '@/lib/navigation';
+import { removeHtmlExtension } from '@/lib/url-utils';
 import api from '@/lib/api';
 import { useNotifications } from '@/hooks/use-cached-data';
 
@@ -170,10 +171,12 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
           <nav className="flex items-center gap-1">
             {filteredMenuItems.map((item) => {
               // next-intl's usePathname already returns path without locale
+              // Normalize pathname by removing .html extension for comparison
+              const normalizedPathname = removeHtmlExtension(pathname || '');
               // For dashboard, only match exact path. For others, match if path starts with href
               const isActive = item.href === '/dashboard'
-                ? pathname === item.href || pathname === '' || pathname === '/'
-                : pathname === item.href || pathname?.startsWith(item.href + '/');
+                ? normalizedPathname === item.href || normalizedPathname === '' || normalizedPathname === '/'
+                : normalizedPathname === item.href || normalizedPathname?.startsWith(item.href + '/');
               return (
                 <Link
                   key={item.href}
@@ -395,10 +398,12 @@ function AppHeaderComponent({ menuItems = defaultMenuItems, showSearch = true }:
         <div className="flex items-center justify-around h-16 px-2">
           {filteredMenuItems.map((item) => {
             // next-intl's usePathname already returns path without locale
+            // Normalize pathname by removing .html extension for comparison
+            const normalizedPathname = removeHtmlExtension(pathname || '');
             // For dashboard, only match exact path. For others, match if path starts with href
             const isActive = item.href === '/dashboard'
-              ? pathname === item.href || pathname === '' || pathname === '/'
-              : pathname === item.href || pathname?.startsWith(item.href + '/');
+              ? normalizedPathname === item.href || normalizedPathname === '' || normalizedPathname === '/'
+              : normalizedPathname === item.href || normalizedPathname?.startsWith(item.href + '/');
             return (
               <Link
                 key={item.href}
