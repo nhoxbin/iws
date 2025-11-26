@@ -18,11 +18,11 @@ export function Link({ href, ...props }: ComponentProps<typeof OriginalLink>) {
 
 // Wrap redirect to automatically add .html extension
 const originalRedirect = navigation.redirect;
-export function redirect(params: { href: string; locale: string }, type?: 'push' | 'replace'): never {
+export function redirect(params: { href: string; locale: string }): never {
   return originalRedirect({
     ...params,
     href: addHtmlExtension(params.href)
-  }, type);
+  });
 }
 
 // Wrap useRouter to automatically add .html extension
@@ -32,10 +32,10 @@ export function useRouter() {
 
   return {
     ...router,
-    push: (href: string, options?: any) => {
+    push: (href: string, options?: Record<string, unknown>) => {
       return router.push(addHtmlExtension(href), options);
     },
-    replace: (href: string, options?: any) => {
+    replace: (href: string, options?: Record<string, unknown>) => {
       return router.replace(addHtmlExtension(href), options);
     },
   };
